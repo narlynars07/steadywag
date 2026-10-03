@@ -10,6 +10,12 @@ const HISTORY = [
   { href: "/meds", label: "Medications" },
   { href: "/visit-prep", label: "Visit prep" },
 ];
+const TODAY_GROUP = [
+  { href: "/today", label: "Today" },
+  { href: "/appointments", label: "Appointments" },
+  { href: "/sitter", label: "Sitter brief" },
+  { href: "/food", label: "Food" },
+];
 const YOUR_DOG = [
   { href: "/your-dog", label: "Your dog" },
   { href: "/diet-history", label: "Diet history" },
@@ -20,23 +26,13 @@ const YOUR_DOG = [
 export function SubNav() {
   const pathname = usePathname();
 
-  if (pathname.startsWith("/food") || pathname.startsWith("/sitter")) {
-    return (
-      <div className="no-print mb-4">
-        <Link href="/today" className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-brand2 underline-offset-4 hover:underline">
-          <span aria-hidden="true">←</span> Back to Today
-        </Link>
-      </div>
-    );
-  }
-
-  const items = HISTORY.some((i) => pathname.startsWith(i.href)) ? HISTORY : YOUR_DOG.some((i) => pathname.startsWith(i.href)) ? YOUR_DOG : null;
+  const items = TODAY_GROUP.some((i) => pathname.startsWith(i.href)) ? TODAY_GROUP : HISTORY.some((i) => pathname.startsWith(i.href)) ? HISTORY : YOUR_DOG.some((i) => pathname.startsWith(i.href)) ? YOUR_DOG : null;
   if (!items) return null;
 
   return (
     <nav aria-label="In this section" className="no-print mb-5 flex flex-wrap gap-2">
       {items.map((i) => {
-        const active = pathname === i.href || (i.href !== "/history" && i.href !== "/your-dog" && pathname.startsWith(i.href));
+        const active = pathname === i.href || (i.href !== "/history" && i.href !== "/your-dog" && i.href !== "/today" && pathname.startsWith(i.href));
         return (
           <Link
             key={i.href}

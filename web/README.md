@@ -30,6 +30,7 @@ Five tabs. Four source labels are used everywhere: **Vet records**, **Family rou
 | Route | What it is |
 | --- | --- |
 | `/` (Ask) | Task home: What does he need today, Something changed, Can he eat this, I'm watching Theo (sitter brief), Prep my vet visit, or a free question. Each task sends its own instructions to the agent. `/ask` redirects here. |
+| `/appointments` | Vet, grooming and dental appointments: a coming-up list, a month calendar, a past list, and "Add to my calendar" (a calendar file with a reminder the day before). Stored only in the browser (`steadywag.appointments.v1`) with a backup file and restore, like check-ins. A "Next appointment" card shows on Today and Visit prep. |
 | `/sitter` | An instant sitter brief built from his records: the ursodiol warning first, his day in order with the vet's instructions and the family's times labeled, treats, foods never to give, warning signs, and a reminder to add phone numbers. Printable. Opened by "I'm watching Theo". |
 | `/today` | A static page built from data: the day as a timeline (vet instruction first, family-routine times labeled), meds not due today, the food card, warning signs, activity. |
 | `/check-in` | A 30-second daily log (appetite, energy, stool 1 to 7, vomiting, meds, note). Stored only in the browser under `steadywag.checkins.v1`, with CSV download and erase. |

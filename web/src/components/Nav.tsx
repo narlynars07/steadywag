@@ -31,7 +31,7 @@ const DogIcon = svg(
 /** The five destinations. Existing pages keep their URLs and sit under the destination that links to them. */
 const TABS: { href: string; label: string; Icon: (p: IconProps) => ReactNode; owns: (path: string) => boolean }[] = [
   { href: "/", label: "Ask", Icon: AskIcon, owns: (p) => p === "/" },
-  { href: "/today", label: "Today", Icon: TodayIcon, owns: (p) => p.startsWith("/today") || p.startsWith("/food") || p.startsWith("/sitter") },
+  { href: "/today", label: "Today", Icon: TodayIcon, owns: (p) => p.startsWith("/today") || p.startsWith("/food") || p.startsWith("/sitter") || p.startsWith("/appointments") },
   { href: "/check-in", label: "Check-in", Icon: CheckInIcon, owns: (p) => p.startsWith("/check-in") },
   {
     href: "/history", label: "History", Icon: HistoryIcon,

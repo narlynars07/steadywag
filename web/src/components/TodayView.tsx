@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { NextAppointment } from "./NextAppointment";
 import { Chip } from "./ui";
 import { SOURCE_LABEL, dueOn, vetTiming } from "@/lib/care";
 import { doseLine, freqLabel } from "@/lib/format";
@@ -118,6 +119,8 @@ export function TodayView({ data }: { data: TodayData }) {
           <strong className="font-semibold">{data.notGiven} is on his written list, but don&apos;t give it.</strong> A verbal instruction never made it onto the paperwork.
         </div>
       )}
+
+      <NextAppointment />
 
       {nowMin !== null && !current && (
         <p className="rounded-2xl border border-line bg-surface px-3.5 py-3 text-[15px] text-ink2">That&apos;s everything on his routine for today. Tomorrow starts with breakfast.</p>
