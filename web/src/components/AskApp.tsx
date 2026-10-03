@@ -250,17 +250,17 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false, onN
   // ---- Home ----
   // The question box comes first, so it is always clear where to ask. Tasks are shortcuts underneath it.
   const chips = context?.suggestions ?? SUGGESTED.slice(0, 3);
-  const rowCls = compact ? "min-h-16 flex-row items-center gap-3" : "lg:min-h-16 lg:flex-row lg:items-center lg:gap-3";
+  const rowCls = compact ? "min-h-16 flex-row items-center gap-3" : "lg:min-h-14 lg:flex-row lg:items-center lg:gap-3 lg:p-3";
   const renderHome = () => (
     <div className="flex flex-col gap-4">
-      {!compact && <section className="flex items-center gap-3.5 rounded-[18px] border border-line bg-surface p-3">
-        <Link href="/history" aria-label="Theo, his history" className="block h-14 w-14 shrink-0 overflow-hidden rounded-full border-[3px] border-surface shadow-[0_0_0_2px_var(--brand)] lg:h-[72px] lg:w-[72px]">
+      {!compact && <section className="flex items-center gap-3 rounded-2xl border border-line bg-surface p-3 lg:p-2.5">
+        <Link href="/history" aria-label="Theo, his history" className="block h-14 w-14 shrink-0 overflow-hidden rounded-full border-[3px] border-surface shadow-[0_0_0_2px_var(--brand)]">
           <Image src="/theo.jpg" alt="Theo" width={144} height={144} priority className="h-full w-full object-cover object-[50%_30%]" />
         </Link>
         <div className="min-w-0">
-          <p className="text-lg font-extrabold tracking-tight text-ink">{profile.name}</p>
-          <p className="text-[13px] leading-snug text-ink2">{profile.line}</p>
-          <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-green">
+          <p className="text-lg font-extrabold leading-tight tracking-tight text-ink lg:text-base">{profile.name}</p>
+          <p className="text-[13px] leading-snug text-ink2 lg:text-xs">{profile.line}</p>
+          <p className="mt-0.5 flex items-center gap-1.5 text-xs font-semibold text-green lg:text-[11px]">
             <span aria-hidden="true" className="h-2 w-2 rounded-full bg-green-fill" />
             {profile.status}
           </p>
@@ -291,7 +291,7 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false, onN
       </div>
 
       {profile.alert && (
-        <div role="note" className="flex items-start gap-2.5 rounded-2xl border border-amber-fill/50 bg-amber-soft px-3.5 py-3 text-sm leading-snug text-amber">
+        <div role="note" className="flex items-start gap-2.5 rounded-2xl border border-amber-fill/50 bg-amber-soft px-3.5 py-3 text-sm leading-snug text-amber lg:px-3 lg:py-2.5 lg:text-[13px]">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="mt-0.5 shrink-0"><path d="M12 4l9 16H3z" /><path d="M12 10v4M12 17h.01" /></svg>
           <p><strong className="font-semibold">{profile.alert} is on his written list, but don&apos;t give it.</strong> A verbal instruction never made it onto the paperwork.</p>
         </div>
@@ -300,11 +300,11 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false, onN
       <p className="-mb-1 text-xs font-bold uppercase tracking-[0.08em] text-muted">Or start with a task</p>
 
       {/* The plan for the day is on the Today page: faster and easier to scan than an agent answer. */}
-      <button type="button" onClick={goToday} className="flex min-h-16 w-full items-center gap-3 rounded-2xl bg-brand p-4 text-left text-on-brand">
+      <button type="button" onClick={goToday} className="flex min-h-16 w-full items-center gap-3 rounded-2xl bg-brand p-4 text-left text-on-brand lg:min-h-14 lg:p-3">
         <svg {...ICON} width={24} height={24}><rect x="4" y="5" width="16" height="15" rx="2" /><path d="M4 10h16M9 3v4M15 3v4" /></svg>
         <span className="flex flex-col gap-0.5">
-          <span className="text-base font-bold">What does he need today?</span>
-          <span className="text-[13px] text-on-brand/85">Opens his plan for the day</span>
+          <span className="text-base font-bold lg:text-[15px]">What does he need today?</span>
+          <span className="text-[13px] text-on-brand/85 lg:text-xs">Opens his plan for the day</span>
         </span>
       </button>
 
@@ -317,14 +317,14 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false, onN
           >
             {c.icon}
             <span className="flex flex-col gap-2 lg:gap-0.5">
-              <span className="text-[15px] font-bold leading-tight text-ink">{c.title}</span>
-              <span className="text-xs leading-snug text-muted">{c.sub}</span>
+              <span className="text-[15px] font-bold leading-tight text-ink lg:text-sm">{c.title}</span>
+              <span className="text-xs leading-snug text-muted lg:text-[11px]">{c.sub}</span>
             </span>
           </button>
         ))}
       </div>
 
-      <div className="rounded-xl bg-amber-soft px-4 py-3 text-sm text-amber">
+      <div className="rounded-xl bg-amber-soft px-4 py-3 text-sm text-amber lg:px-3 lg:py-2.5 lg:text-xs">
         Not veterinary advice. If your dog isn&apos;t eating, is vomiting repeatedly, has blood or black stool, yellow gums, or seems very unwell, contact your vet or an emergency vet now.
       </div>
       <p className="text-xs leading-relaxed text-muted">Steadywag tracks and prepares. It never diagnoses, doses, or replaces his vet.</p>
@@ -335,27 +335,27 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false, onN
   const right = threadStarted ? renderThread() : pending ? renderInput() : null;
   if (compact) return right ?? renderHome();
   return (
-    <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] lg:items-start">
-      <div className={right ? "hidden lg:block" : ""}>{renderHome()}</div>
-      <div className={`${right ? "" : "hidden lg:flex"} flex-col lg:sticky lg:top-24 lg:h-[calc(100vh-8rem)] lg:min-h-[520px] lg:overflow-hidden lg:rounded-2xl lg:border lg:border-line lg:bg-surface`}>
-        <div className="hidden items-center gap-3 border-b border-line px-4 py-3 lg:flex">
-          <Image src="/theo.jpg" alt="" width={72} height={72} loading="eager" className="h-10 w-10 rounded-full object-cover object-[50%_30%] shadow-[0_0_0_2px_var(--brand)]" />
+    <div className="mx-auto grid max-w-5xl gap-6 lg:h-[calc(100vh-9rem)] lg:min-h-[560px] lg:grid-cols-[320px_minmax(0,1fr)] lg:items-stretch lg:gap-5">
+      <div className={`${right ? "hidden lg:block" : ""} lg:min-h-0 lg:overflow-y-auto lg:pr-1`}>{renderHome()}</div>
+      <div className={`${right ? "" : "hidden lg:flex"} flex-col lg:h-full lg:min-h-0 lg:overflow-hidden lg:rounded-2xl lg:border lg:border-line lg:bg-surface`}>
+        <div className="hidden items-center gap-3 border-b border-line px-4 py-2.5 lg:flex">
+          <Image src="/theo.jpg" alt="" width={72} height={72} loading="eager" className="h-9 w-9 rounded-full object-cover object-[50%_30%] shadow-[0_0_0_2px_var(--brand)]" />
           <div className="min-w-0 flex-1">
-            <p className="text-base font-extrabold tracking-tight text-ink">Ask about Theo</p>
+            <p className="text-[15px] font-extrabold leading-tight tracking-tight text-ink">Ask about Theo</p>
             <p className="text-xs text-muted">Answers come from his records, with the sources shown</p>
           </div>
           {threadStarted && <button type="button" onClick={back} className="min-h-11 rounded-full px-3 text-sm font-semibold text-brand2 hover:bg-brand-soft">New question</button>}
         </div>
-        <div className="lg:flex-1 lg:overflow-y-auto lg:p-5">
+        <div className="lg:flex-1 lg:overflow-y-auto lg:p-4">
           {right ?? (
             <div className="flex flex-col gap-4">
               <div>
-                <p className="text-lg font-extrabold tracking-tight text-ink">Pick a task on the left, or ask anything below.</p>
-                <p className="mt-1 text-[15px] leading-relaxed text-ink2">The answer appears here, with what I checked and where each part came from. You can keep asking follow-ups. Try one of these:</p>
+                <p className="text-base font-extrabold tracking-tight text-ink">Pick a task on the left, or ask anything below.</p>
+                <p className="mt-1 text-sm leading-relaxed text-ink2">The answer appears here, with what I checked and where each part came from. You can keep asking follow-ups. Try one of these:</p>
               </div>
               <div className="flex flex-wrap gap-2">
                 {SUGGESTED.map((q) => (
-                  <button key={q} type="button" onClick={() => send(q)} className="min-h-11 rounded-full border border-line bg-paper px-4 text-sm font-semibold text-brand2 hover:bg-brand-soft">{q}</button>
+                  <button key={q} type="button" onClick={() => send(q)} className="min-h-10 rounded-full border border-line bg-paper px-3.5 text-[13px] font-semibold text-brand2 hover:bg-brand-soft">{q}</button>
                 ))}
               </div>
             </div>
@@ -364,11 +364,11 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false, onN
         <form onSubmit={(e) => { e.preventDefault(); send(freeText); }} className="hidden gap-2 border-t border-line p-3 lg:flex">
           <label htmlFor="free-ask-lg" className="sr-only">Ask anything about Theo</label>
           <input id="free-ask-lg" value={freeText} onChange={(e) => setFreeText(e.target.value)} maxLength={1500} autoComplete="off" placeholder={threadStarted ? "Ask a follow-up…" : "Ask anything about Theo…"}
-            className="h-12 min-w-0 flex-1 rounded-xl border border-line bg-paper px-4 text-[15px] text-ink outline-none focus:border-brand" />
+            className="h-11 min-w-0 flex-1 rounded-xl border border-line bg-paper px-4 text-sm text-ink outline-none focus:border-brand" />
           {busy ? (
-            <button type="button" onClick={stop} className="h-12 rounded-xl border border-line px-5 text-[15px] font-bold text-ink2">Stop</button>
+            <button type="button" onClick={stop} className="h-11 rounded-xl border border-line px-5 text-sm font-bold text-ink2">Stop</button>
           ) : (
-            <button type="submit" disabled={!freeText.trim()} className="h-12 rounded-xl bg-brand px-5 text-[15px] font-bold text-on-brand disabled:opacity-40">Ask</button>
+            <button type="submit" disabled={!freeText.trim()} className="h-11 rounded-xl bg-brand px-5 text-sm font-bold text-on-brand disabled:opacity-40">Ask</button>
           )}
         </form>
       </div>

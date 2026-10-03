@@ -68,10 +68,11 @@ export function Nav() {
                   href={t.href}
                   aria-current={active ? "page" : undefined}
                   onClick={() => { if (t.href === "/") resetConversation(); }}
-                  className={`flex min-h-11 items-center rounded-full px-4 text-sm font-medium transition-colors ${
+                  className={`flex min-h-10 items-center gap-2 rounded-full px-3.5 text-sm font-medium transition-colors ${
                     active ? "bg-brand text-on-brand" : "text-muted hover:bg-brand-soft hover:text-ink"
                   }`}
                 >
+                  <t.Icon className="h-[18px] w-[18px]" />
                   {t.label}
                 </Link>
               );
