@@ -207,7 +207,7 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false }: {
       {compact ? (
         <h2 className="text-lg font-extrabold tracking-tight text-ink">What do you need help with?</h2>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 lg:hidden">
           <p className="text-xs font-bold uppercase tracking-[0.08em] text-brand2">Theo&apos;s care companion</p>
           <h1 className="text-[28px] font-extrabold leading-[1.15] tracking-tight text-ink">What do you need help with?</h1>
           <p className="text-[15px] leading-relaxed text-ink2">I know Theo&apos;s plan and his 180 pages of records. I&apos;ll tell you when the paperwork would lead you wrong.</p>
@@ -229,21 +229,23 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false }: {
         </span>
       </button>
 
-      <div className="grid grid-cols-2 gap-2.5">
+      <div className={`grid grid-cols-2 gap-2.5 ${compact ? "" : "lg:grid-cols-1"}`}>
         {TASK_CARDS.map((c) => (
           <button
             key={c.task} type="button"
             onClick={() => (c.task === "sitter" || c.task === "visit" ? run(c.task) : (setTask(c.task), setView("input")))}
-            className="flex min-h-[104px] flex-col gap-2 rounded-2xl border border-line bg-surface p-3.5 text-left text-brand2"
+            className={`flex min-h-[104px] flex-col gap-2 rounded-2xl border border-line bg-surface p-3.5 text-left text-brand2 ${compact ? "" : "lg:min-h-16 lg:flex-row lg:items-center lg:gap-3"}`}
           >
             {c.icon}
-            <span className="text-[15px] font-bold leading-tight text-ink">{c.title}</span>
-            <span className="text-xs leading-snug text-muted">{c.sub}</span>
+            <span className="flex flex-col gap-2 lg:gap-0.5">
+              <span className="text-[15px] font-bold leading-tight text-ink">{c.title}</span>
+              <span className="text-xs leading-snug text-muted">{c.sub}</span>
+            </span>
           </button>
         ))}
       </div>
 
-      <form onSubmit={(e) => { e.preventDefault(); run("free", freeText); }} className="flex flex-col gap-2">
+      <form onSubmit={(e) => { e.preventDefault(); run("free", freeText); }} className={`flex flex-col gap-2 ${compact ? "" : "lg:hidden"}`}>
         <label htmlFor="free-ask" className="text-[13px] font-semibold text-ink2">Or ask anything about Theo</label>
         <div className="flex gap-2">
           <input
@@ -267,16 +269,39 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false }: {
   // Compact (the floating window) shows one screen at a time. The full page shows the tasks and the conversation side by side on desktop.
   const right = view === "answer" ? renderAnswer() : view === "input" && (task === "changed" || task === "eat") ? renderInput() : null;
   if (compact) return right ?? renderHome();
+  const SUGGESTED = ["Is his ALT trend moving the right way?", "Are his freeze-dried treats allowed?", "What did he eat before his diagnosis?", "What has been recommended and not done?"];
   return (
-    <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-[minmax(0,400px)_minmax(0,1fr)] lg:items-start">
+    <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] lg:items-start">
       <div className={right ? "hidden lg:block" : ""}>{renderHome()}</div>
-      <div className={right ? "" : "hidden lg:block"}>
-        {right ?? (
-          <div className="rounded-2xl border border-dashed border-line bg-surface p-8 text-center text-[15px] leading-relaxed text-muted">
-            <p className="font-semibold text-ink2">Pick a task, or ask a question.</p>
-            <p className="mt-1">The answer appears here, with what I checked and where each part came from.</p>
+      <div className={`${right ? "" : "hidden lg:flex"} flex-col lg:sticky lg:top-24 lg:h-[calc(100vh-8rem)] lg:min-h-[520px] lg:overflow-hidden lg:rounded-2xl lg:border lg:border-line lg:bg-surface`}>
+        <div className="hidden items-center gap-3 border-b border-line px-4 py-3 lg:flex">
+          <Image src="/theo.jpg" alt="" width={72} height={72} loading="eager" className="h-10 w-10 rounded-full object-cover object-[50%_30%] shadow-[0_0_0_2px_var(--brand)]" />
+          <div>
+            <p className="text-base font-extrabold tracking-tight text-ink">Ask about Theo</p>
+            <p className="text-xs text-muted">Answers come from his records, with the sources shown</p>
           </div>
-        )}
+        </div>
+        <div className="lg:flex-1 lg:overflow-y-auto lg:p-5">
+          {right ?? (
+            <div className="flex flex-col gap-4">
+              <div>
+                <p className="text-lg font-extrabold tracking-tight text-ink">Pick a task on the left, or ask anything below.</p>
+                <p className="mt-1 text-[15px] leading-relaxed text-ink2">The answer appears here, with what I checked and where each part came from. Try one of these:</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {SUGGESTED.map((q) => (
+                  <button key={q} type="button" onClick={() => { setFreeText(q); run("free", q); }} className="min-h-11 rounded-full border border-line bg-paper px-4 text-sm font-semibold text-brand2 hover:bg-brand-soft">{q}</button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        <form onSubmit={(e) => { e.preventDefault(); run("free", freeText); }} className="hidden gap-2 border-t border-line p-3 lg:flex">
+          <label htmlFor="free-ask-lg" className="sr-only">Ask anything about Theo</label>
+          <input id="free-ask-lg" value={freeText} onChange={(e) => setFreeText(e.target.value)} maxLength={1500} autoComplete="off" placeholder="Ask anything about Theo…"
+            className="h-12 min-w-0 flex-1 rounded-xl border border-line bg-paper px-4 text-[15px] text-ink outline-none focus:border-brand" />
+          <button type="submit" disabled={!freeText.trim() || busy} className="h-12 rounded-xl bg-brand px-5 text-[15px] font-bold text-on-brand disabled:opacity-40">Ask</button>
+        </form>
       </div>
     </div>
   );

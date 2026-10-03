@@ -23,14 +23,24 @@ function inline(text: string): ReactNode[] {
 
 export function Rich({ text }: { text: string }) {
   const blocks = text.split(/\n{2,}/);
+  const bullet = /^\s*[-*]\s+/;
+  const heading = /^#{1,4}\s+/;
   return (
     <>
-      {blocks.map((b, i) => {
-        const lines = b.split("\n");
-        if (lines.every((l) => /^\s*[-*]\s+/.test(l))) {
-          return <ul key={i} className="my-1 list-disc space-y-1 pl-5">{lines.map((l, j) => <li key={j}>{inline(l.replace(/^\s*[-*]\s+/, ""))}</li>)}</ul>;
+      {blocks.flatMap((b, i) => {
+        // A block can mix text, headings and bullets, so walk it line by line and group the runs.
+        const out: ReactNode[] = [];
+        let list: string[] = [];
+        let para: string[] = [];
+        const flushList = () => { if (list.length) { out.push(<ul key={`${i}-u${out.length}`} className="my-1 list-disc space-y-1 pl-5">{list.map((l, j) => <li key={j}>{inline(l)}</li>)}</ul>); list = []; } };
+        const flushPara = () => { if (para.length) { out.push(<p key={`${i}-p${out.length}`} className="my-1">{para.map((l, j) => <Fragment key={j}>{j > 0 && <br />}{inline(l)}</Fragment>)}</p>); para = []; } };
+        for (const line of b.split("\n")) {
+          if (bullet.test(line)) { flushPara(); list.push(line.replace(bullet, "")); }
+          else if (heading.test(line)) { flushPara(); flushList(); out.push(<p key={`${i}-h${out.length}`} className="mb-1 mt-3 font-bold text-ink">{inline(line.replace(heading, ""))}</p>); }
+          else { flushList(); para.push(line); }
         }
-        return <p key={i} className="my-1">{lines.map((l, j) => <Fragment key={j}>{j > 0 && <br />}{inline(l)}</Fragment>)}</p>;
+        flushList(); flushPara();
+        return out;
       })}
     </>
   );
