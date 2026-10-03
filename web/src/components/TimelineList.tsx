@@ -33,25 +33,48 @@ const DOT = { neutral: "bg-muted", brand: "bg-brand", amber: "bg-amber-fill", re
 
 export function TimelineList({ events }: { events: TimelineEvent[] }) {
   const [kind, setKind] = useState<(typeof KINDS)[number]["key"]>("all");
-  const shown = events.filter((e) => kind === "all" || e.kind === kind || e.also?.includes(kind));
+  const [year, setYear] = useState<string>("all");
+  const matchesKind = (e: TimelineEvent) => kind === "all" || e.kind === kind || !!e.also?.includes(kind);
+  const ofKind = events.filter(matchesKind);
+  // Year chips count what the current type filter would show, so a chip never promises entries that are not there.
+  const years = [...new Set(events.map((e) => e.date.slice(0, 4)))].sort().reverse();
+  const countIn = (y: string) => ofKind.filter((e) => e.date.startsWith(y)).length;
+  const shown = ofKind.filter((e) => year === "all" || e.date.startsWith(year));
   const byYear = new Map<string, TimelineEvent[]>();
   for (const e of shown) byYear.set(e.date.slice(0, 4), [...(byYear.get(e.date.slice(0, 4)) ?? []), e]);
 
+  const chip = (on: boolean) => `shrink-0 min-h-11 rounded-full border px-4 text-sm font-semibold ${on ? "border-brand bg-brand text-on-brand" : "border-line bg-surface text-ink2 hover:bg-brand-soft"}`;
+
   return (
     <div>
-      <div role="group" aria-label="Filter timeline" className="mb-5 flex flex-wrap gap-2">
-        {KINDS.map((k) => (
-          <button key={k.key} onClick={() => setKind(k.key)} aria-pressed={kind === k.key}
-            className={`rounded-full border px-3 py-1 text-sm ${kind === k.key ? "border-brand bg-brand text-on-brand" : "border-line bg-surface text-muted hover:bg-brand-soft"}`}>
-            {k.label}
-          </button>
-        ))}
-        <span className="ml-auto self-center text-sm text-muted">{shown.length} entries</span>
+      <div className="mb-5 space-y-3">
+        <div>
+          <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-muted">Year</p>
+          <div role="group" aria-label="Jump to a year" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
+            <button type="button" onClick={() => setYear("all")} aria-pressed={year === "all"} className={chip(year === "all")}>All years</button>
+            {years.map((y) => (
+              <button key={y} type="button" onClick={() => setYear(y)} aria-pressed={year === y} className={chip(year === y)}>
+                {y} <span className={year === y ? "text-on-brand/85" : "text-muted"}>({countIn(y)})</span>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-muted">Show</p>
+          <div role="group" aria-label="Filter timeline" className="flex flex-wrap items-center gap-2">
+            {KINDS.map((k) => (
+              <button key={k.key} type="button" onClick={() => setKind(k.key)} aria-pressed={kind === k.key} className={chip(kind === k.key)}>{k.label}</button>
+            ))}
+          </div>
+        </div>
+        <p aria-live="polite" className="text-sm text-muted">{shown.length} {shown.length === 1 ? "entry" : "entries"}{year !== "all" ? ` in ${year}` : ""}</p>
       </div>
+
+      {shown.length === 0 && <p className="rounded-xl border border-line bg-surface p-4 text-muted">Nothing of this kind is on file for {year === "all" ? "these filters" : year}.</p>}
 
       {[...byYear.entries()].map(([year, list]) => (
         <section key={year} className="mb-8">
-          <h2 className="sticky top-14 z-10 mb-3 bg-paper/90 py-1 font-serif text-2xl font-semibold backdrop-blur">{year}</h2>
+          <h2 className="mb-3 py-1 font-serif text-2xl font-semibold">{year}</h2>
           <ol className="space-y-3 border-l-2 border-line pl-5">
             {list.map((e) => (
               <li key={e.id} id={e.id} className="relative scroll-mt-24 rounded-xl border border-line bg-surface p-4">

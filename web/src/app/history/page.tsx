@@ -119,60 +119,84 @@ export default async function History() {
 
   return (
     <div className="space-y-6">
-      <section aria-labelledby="sixty" className="flex max-w-3xl flex-col gap-3">
+      {/* One opening card: who he is, his story in 60 seconds, where he stands today, and why the records have gaps. */}
+      <section aria-labelledby="sixty" className="rounded-[22px] border border-line bg-surface p-5 shadow-[var(--shadow)] sm:p-6">
         <div className="flex items-center gap-3.5">
           <Image src="/theo.jpg" alt="Theo, a cream and tan Shih Tzu mix, smiling at the camera on a rocky lakeshore" width={144} height={144} priority
             className="h-[72px] w-[72px] shrink-0 rounded-full border-[3px] border-surface object-cover object-[50%_30%] shadow-[0_0_0_2px_var(--brand)]" />
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.08em] text-brand2">His history</p>
             <h1 id="sixty" className="text-[26px] font-extrabold leading-tight tracking-tight text-ink">{summary?.title ?? "Theo in 60 seconds"}</h1>
+            <p className="text-sm text-muted">{ageYears(dog.birthYear)}-year-old neutered {dog.sex} {dog.breed}</p>
           </div>
         </div>
+
         {summary && (
           <>
-            <p className="text-[15px] leading-relaxed text-ink2">{summary.body}</p>
+            <p className="mt-4 text-[15px] leading-relaxed text-ink2 sm:text-base">{summary.body}</p>
             <SourceList sources={summary.sources} />
           </>
         )}
-      </section>
 
-      <section aria-labelledby="intro" className="max-w-3xl">
-        <h2 id="intro" className="font-serif text-3xl font-bold leading-tight text-ink">Meet {dog.name}.</h2>
-        <p className="mt-3 text-lg text-ink2">
-          Theo is {[8, 11, 18].includes(ageYears(dog.birthYear)) ? "an" : "a"} {ageYears(dog.birthYear)}-year-old {dog.breed} whose liver stores too much copper. He eats a diet formulated for him alone, takes
-          medications on a schedule, and has had repeated flares of pancreatitis. His care lives in about 180 pages of PDFs, emails, and things said out
-          loud in an exam room.
-        </p>
-        <p className="mt-3 text-ink2">
-          Most of those records agree. The places they don&apos;t are the ones that matter. A spoken instruction about one medication never reached the
-          written list. A lower-fat diet has been recommended at four visits and still hasn&apos;t been made. A key lab result from his last visit was never
-          recorded.
-        </p>
-        <p className="mt-3 text-ink2">
-          Steadywag pulls his records into one chart that shows what&apos;s known, what&apos;s missing, and what to ask at the next visit. We&apos;re sharing
-          it, de-identified, so one real case laid out clearly can help other dogs and the families caring for them.
-        </p>
-      </section>
+        <dl className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {[
+            ["ALT now", `${lastALT.value} U/L`, "In range", "green" as const],
+            ["Weight", `${lastWeight.weightKg} kg`, `${weightDelta > 0 ? "+" : ""}${weightDelta} kg since ${fmtMonthYear(prevWeight.date).split(" ")[0]}`, "neutral" as const],
+            ["Last specialist visit", fmtDate(lastVisit.date), "Doing very well", "green" as const],
+            ["Still open", `${gaps.length} records`, "not on file", "amber" as const],
+          ].map(([label, value, note, tone]) => (
+            <div key={label} className="rounded-xl bg-paper px-3 py-2.5">
+              <dt className="text-xs text-muted">{label}</dt>
+              <dd className="text-[17px] font-extrabold tracking-tight text-ink">{value}</dd>
+              <dd className={`text-xs font-semibold ${tone === "green" ? "text-green" : tone === "amber" ? "text-amber" : "text-muted"}`}>{note}</dd>
+            </div>
+          ))}
+        </dl>
 
-      <section aria-labelledby="why-gaps" className="max-w-3xl rounded-[22px] border border-line bg-surface p-5 shadow-[var(--shadow)] sm:p-6">
-        <p id="why-gaps" className="text-ink2">
-          <strong className="font-semibold text-ink">Why the gaps are here.</strong> Theo&apos;s care runs through four different teams, about 180 pages of
-          records, and instructions given out loud in exam rooms. No one person can hold all of it, including us. Steadywag doesn&apos;t hide what&apos;s
-          missing or inconsistent. It shows it, so the right question gets asked at the next visit instead of being discovered in an emergency.
-        </p>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <Link href="/" className="rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-on-brand">Ask the records</Link>
-          <Link href="/diet-history" className="rounded-full border border-line bg-surface px-5 py-2.5 text-sm font-medium hover:bg-brand-soft">Build a diet history for your dog</Link>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {dog.conditions.map((c) => (
+            <Chip key={c._id} wrap tone={c.status === "resolved" ? "green" : "brand"} title={c.summary}>
+              {c.title}{c.status === "resolved" ? " · resolved" : ""}
+            </Chip>
+          ))}
         </div>
+
+        <details className="mt-4 border-t border-line">
+          <summary className="flex min-h-12 cursor-pointer items-center text-[15px] font-semibold text-brand2">About this record, and why it has gaps</summary>
+          <div className="space-y-3 pb-1 text-[15px] leading-relaxed text-ink2">
+            <p>
+              Theo&apos;s care lives in about 180 pages of PDFs, emails, and things said out loud in an exam room, across four different teams. Most of it agrees. The places it
+              doesn&apos;t are the ones that matter: a spoken instruction about one medication never reached the written list, a lower-fat diet has been recommended at four visits
+              and still hasn&apos;t been made, and a key lab result from his last visit was never recorded.
+            </p>
+            <p>
+              Steadywag doesn&apos;t hide what&apos;s missing or inconsistent. It shows it, so the right question gets asked at the next visit instead of being discovered in an
+              emergency. We&apos;re sharing it, de-identified, so one real case laid out clearly can help other dogs and the families caring for them.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Link href="/" className="flex min-h-11 items-center rounded-full bg-brand px-5 text-sm font-medium text-on-brand">Ask the records</Link>
+              <Link href="/diet-history" className="flex min-h-11 items-center rounded-full border border-line bg-surface px-5 text-sm font-medium hover:bg-brand-soft">Build a diet history for your dog</Link>
+            </div>
+          </div>
+        </details>
       </section>
 
+      <nav aria-label="On this page" className="sticky top-16 z-20 -mx-4 overflow-x-auto bg-paper/95 px-4 py-2 backdrop-blur sm:mx-0 sm:px-0 md:top-[4.5rem]">
+        <ul className="flex gap-2">
+          {[["The whole story", "#chart"], ["Chapters", "#chapters"], ["What it shows", "#patterns"], ["What's missing", "#open"]].map(([l, h]) => (
+            <li key={h} className="shrink-0"><a href={h} className="flex min-h-11 items-center rounded-full border border-line bg-surface px-4 text-sm font-semibold text-brand2 hover:bg-brand-soft">{l}</a></li>
+          ))}
+        </ul>
+      </nav>
+
+      <div id="chart" className="scroll-mt-32" />
       <Card title="The whole story, one timeline" aside={<Link href="/labs" className="text-brand2 underline">All labs</Link>}>
         <p className="mb-2 text-sm text-muted">ALT liver enzyme on a log scale, with his medications and flares underneath. Scrolls sideways on a phone.</p>
         <LineChart points={alt} unit="U/L" label="ALT" annotations={annotations} scale="log" height={260} lanes={lanes} markers={markers} minWidth={640} />
         <p className="mt-2 text-sm text-muted">ALT is a stand-in marker: it can miss mild leftover copper.</p>
       </Card>
 
-      <section aria-labelledby="chapters" className="space-y-3">
+      <section aria-labelledby="chapters" className="scroll-mt-32 space-y-3">
         <h2 id="chapters" className="text-xl font-extrabold tracking-tight text-ink">Five chapters</h2>
         {chapters.map((c, i) => (
           <details key={c._id} open={i === 0} className="group rounded-2xl border border-line bg-surface">
@@ -205,7 +229,7 @@ export default async function History() {
         ))}
       </section>
 
-      <section aria-labelledby="patterns" className="space-y-3">
+      <section aria-labelledby="patterns" className="scroll-mt-32 space-y-3">
         <h2 id="patterns" className="text-xl font-extrabold tracking-tight text-ink">What his history shows</h2>
         {patterns.map((p) => (
           <article key={p._id} className="rounded-2xl border border-line bg-surface px-4 py-3">
@@ -223,6 +247,7 @@ export default async function History() {
         ))}
       </nav>
 
+      <div id="open" className="scroll-mt-32" />
       <Card title="Open items in Theo's chart" aside="What Steadywag flags" tone="lavender">
         <p className="mb-1 text-sm text-ink2">
           A spoken instruction that never reached the written list, a result nobody recorded, a recommendation still not done. Each one is kept visible on
@@ -242,17 +267,7 @@ export default async function History() {
 
       <header>
         <p className="mb-1 text-sm font-medium uppercase tracking-wide text-brand2">His chart</p>
-        <h2 className="font-serif text-3xl font-bold leading-none text-ink">At a glance</h2>
-        <p className="mt-3 text-muted">
-          {ageYears(dog.birthYear)}-year-old neutered {dog.sex} {dog.breed} · {lastWeight.weightKg} kg · last specialist visit {fmtDate(lastVisit.date)}, doing very well
-        </p>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {dog.conditions.map((c) => (
-            <Chip key={c._id} wrap tone={c.status === "resolved" ? "green" : "brand"} title={c.summary}>
-              {c.title}{c.status === "resolved" ? " · resolved" : ""}
-            </Chip>
-          ))}
-        </div>
+        <h2 className="font-serif text-3xl font-bold leading-none text-ink">Trends</h2>
       </header>
 
       <div className="grid gap-6 sm:grid-cols-3">
