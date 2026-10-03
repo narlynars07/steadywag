@@ -331,46 +331,118 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false, onN
     </div>
   );
 
+  // ---- Desktop: a quiet sidebar of quick tasks, and a roomy chat panel ----
+  const TaskRow = ({ icon, title, sub, onClick, primary = false }: { icon: ReactNode; title: string; sub: string; onClick: () => void; primary?: boolean }) => (
+    <li>
+      <button type="button" onClick={onClick} className={`flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left transition-colors ${primary ? "border border-line bg-surface shadow-[0_1px_2px_rgba(23,19,42,0.06)]" : "hover:bg-surface"}`}>
+        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${primary ? "bg-brand text-on-brand" : "bg-brand-soft text-brand2"}`}>{icon}</span>
+        <span className="min-w-0">
+          <span className="block text-sm font-semibold leading-tight text-ink">{title}</span>
+          <span className="block text-xs leading-snug text-muted">{sub}</span>
+        </span>
+      </button>
+    </li>
+  );
+  const small = { ...ICON, width: 18, height: 18 };
+
+  const renderSidebar = () => (
+    <div className="flex flex-col gap-5">
+      <section className="rounded-2xl border border-line bg-surface p-4">
+        <div className="flex items-center gap-3">
+          <Link href="/history" aria-label="Theo, his history" className="block h-12 w-12 shrink-0 overflow-hidden rounded-full shadow-[0_0_0_2px_var(--brand-soft)]">
+            <Image src="/theo.jpg" alt="Theo" width={96} height={96} priority className="h-full w-full object-cover object-[50%_30%]" />
+          </Link>
+          <div className="min-w-0">
+            <p className="text-base font-extrabold leading-tight tracking-tight text-ink">{profile.name}</p>
+            <p className="text-xs text-muted">{profile.line}</p>
+          </div>
+        </div>
+        <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-green-soft px-2.5 py-1 text-xs font-semibold text-green">
+          <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-green-fill" />
+          {profile.status}
+        </p>
+        {profile.alert && (
+          <div role="note" className="mt-3 flex items-start gap-2 rounded-xl bg-amber-soft p-3 text-[13px] leading-snug text-amber">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="mt-0.5 shrink-0"><path d="M12 4l9 16H3z" /><path d="M12 10v4M12 17h.01" /></svg>
+            <p><strong className="font-semibold">Don&apos;t give {profile.alert}.</strong> It&apos;s on his written list, but a verbal instruction never made it onto the paperwork.</p>
+          </div>
+        )}
+      </section>
+
+      <div>
+        <p className="mb-1.5 px-1 text-xs font-semibold text-muted">Quick tasks</p>
+        <ul className="flex flex-col gap-0.5">
+          <TaskRow primary onClick={goToday} title="What does he need today?" sub="Opens his plan for the day"
+            icon={<svg {...small}><rect x="4" y="5" width="16" height="15" rx="2" /><path d="M4 10h16M9 3v4M15 3v4" /></svg>} />
+          {TASK_CARDS.map((c) => (
+            <TaskRow key={c.task} icon={<span className="[&>svg]:h-[18px] [&>svg]:w-[18px]">{c.icon}</span>} title={c.title} sub={c.sub}
+              onClick={() => (c.task === "sitter" ? goTo("/sitter") : c.task === "visit" ? goTo("/visit-prep") : setPending(c.task as "changed" | "eat"))} />
+          ))}
+        </ul>
+      </div>
+
+      <p className="px-1 text-xs leading-relaxed text-muted">Steadywag tracks and prepares. It never diagnoses, doses, or replaces his vet.</p>
+    </div>
+  );
+
+  const emptyChat = (
+    <div className="flex h-full flex-col items-center justify-center gap-5 px-6 py-8 text-center">
+      <Image src="/theo.jpg" alt="" width={144} height={144} loading="eager" className="h-[72px] w-[72px] rounded-full object-cover object-[50%_30%] shadow-[0_0_0_4px_var(--brand-soft)]" />
+      <div>
+        <h2 className="text-[28px] font-extrabold leading-tight tracking-tight text-ink">What would you like to know about Theo?</h2>
+        <p className="mx-auto mt-2 max-w-md text-[15px] leading-relaxed text-ink2">Every answer shows what I checked and where each part came from. Keep asking follow-ups.</p>
+      </div>
+      <form onSubmit={(e) => { e.preventDefault(); send(freeText); }} className="flex w-full max-w-xl items-center gap-2 rounded-2xl border border-line bg-surface py-1.5 pl-4 pr-1.5 shadow-[0_2px_8px_rgba(23,19,42,0.06)]">
+        <label htmlFor="free-ask-lg" className="sr-only">Ask anything about Theo</label>
+        <input id="free-ask-lg" value={freeText} onChange={(e) => setFreeText(e.target.value)} maxLength={1500} autoComplete="off" placeholder="Ask anything about Theo…"
+          className="h-10 min-w-0 flex-1 bg-transparent text-[15px] text-ink outline-none" />
+        <button type="submit" aria-label="Ask" disabled={!freeText.trim()} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand text-on-brand disabled:opacity-40">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6" /></svg>
+        </button>
+      </form>
+      <div className="grid w-full max-w-xl gap-2.5 sm:grid-cols-2">
+        {SUGGESTED.map((q) => (
+          <button key={q} type="button" onClick={() => send(q)} className="flex min-h-14 items-start justify-between gap-2 rounded-xl border border-line bg-paper px-3.5 py-3 text-left text-sm text-ink2 transition-colors hover:bg-brand-soft">
+            <span>{q}</span><span aria-hidden="true" className="text-muted">↗</span>
+          </button>
+        ))}
+      </div>
+      <p className="mt-2 max-w-lg text-[11px] leading-relaxed text-muted">Not veterinary advice. If your dog isn&apos;t eating, is vomiting repeatedly, has blood or black stool, yellow gums, or seems very unwell, contact your vet or an emergency vet now.</p>
+    </div>
+  );
+
   // Compact (the floating window) shows one screen at a time. The full page shows the tasks and the chat side by side on desktop.
   const right = threadStarted ? renderThread() : pending ? renderInput() : null;
   if (compact) return right ?? renderHome();
   return (
-    <div className="mx-auto grid max-w-5xl gap-6 lg:h-[calc(100vh-9rem)] lg:min-h-[560px] lg:grid-cols-[320px_minmax(0,1fr)] lg:items-stretch lg:gap-5">
-      <div className={`${right ? "hidden lg:block" : ""} lg:min-h-0 lg:overflow-y-auto lg:pr-1`}>{renderHome()}</div>
+    <div className="mx-auto grid max-w-5xl gap-6 lg:h-[calc(100vh-9rem)] lg:min-h-[560px] lg:grid-cols-[300px_minmax(0,1fr)] lg:items-stretch lg:gap-5">
+      <div className={`${right ? "hidden lg:block" : ""} lg:min-h-0 lg:overflow-y-auto lg:pr-1`}>
+        <div className="lg:hidden">{renderHome()}</div>
+        <div className="hidden lg:block">{renderSidebar()}</div>
+      </div>
       <div className={`${right ? "" : "hidden lg:flex"} flex-col lg:h-full lg:min-h-0 lg:overflow-hidden lg:rounded-2xl lg:border lg:border-line lg:bg-surface`}>
-        <div className="hidden items-center gap-3 border-b border-line px-4 py-2.5 lg:flex">
-          <Image src="/theo.jpg" alt="" width={72} height={72} loading="eager" className="h-9 w-9 rounded-full object-cover object-[50%_30%] shadow-[0_0_0_2px_var(--brand)]" />
+        <div className="hidden items-center gap-3 border-b border-line px-5 py-3 lg:flex">
           <div className="min-w-0 flex-1">
-            <p className="text-[15px] font-extrabold leading-tight tracking-tight text-ink">Ask about Theo</p>
-            <p className="text-xs text-muted">Answers come from his records, with the sources shown</p>
+            <p className="text-sm font-bold leading-tight text-ink">Ask about Theo</p>
+            <p className="text-xs text-muted">Answers come from his records, with sources shown</p>
           </div>
           {threadStarted && <button type="button" onClick={back} className="min-h-11 rounded-full px-3 text-sm font-semibold text-brand2 hover:bg-brand-soft">New question</button>}
         </div>
         <div className="lg:flex-1 lg:overflow-y-auto lg:p-4">
-          {right ?? (
-            <div className="flex flex-col gap-4">
-              <div>
-                <p className="text-base font-extrabold tracking-tight text-ink">Pick a task on the left, or ask anything below.</p>
-                <p className="mt-1 text-sm leading-relaxed text-ink2">The answer appears here, with what I checked and where each part came from. You can keep asking follow-ups. Try one of these:</p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {SUGGESTED.map((q) => (
-                  <button key={q} type="button" onClick={() => send(q)} className="min-h-10 rounded-full border border-line bg-paper px-3.5 text-[13px] font-semibold text-brand2 hover:bg-brand-soft">{q}</button>
-                ))}
-              </div>
-            </div>
-          )}
+          {right ?? <div className="hidden h-full lg:block">{emptyChat}</div>}
         </div>
-        <form onSubmit={(e) => { e.preventDefault(); send(freeText); }} className="hidden gap-2 border-t border-line p-3 lg:flex">
-          <label htmlFor="free-ask-lg" className="sr-only">Ask anything about Theo</label>
-          <input id="free-ask-lg" value={freeText} onChange={(e) => setFreeText(e.target.value)} maxLength={1500} autoComplete="off" placeholder={threadStarted ? "Ask a follow-up…" : "Ask anything about Theo…"}
-            className="h-11 min-w-0 flex-1 rounded-xl border border-line bg-paper px-4 text-sm text-ink outline-none focus:border-brand" />
-          {busy ? (
-            <button type="button" onClick={stop} className="h-11 rounded-xl border border-line px-5 text-sm font-bold text-ink2">Stop</button>
-          ) : (
-            <button type="submit" disabled={!freeText.trim()} className="h-11 rounded-xl bg-brand px-5 text-sm font-bold text-on-brand disabled:opacity-40">Ask</button>
-          )}
-        </form>
+        {(threadStarted || pending) && (
+          <form onSubmit={(e) => { e.preventDefault(); send(freeText); }} className="hidden items-center gap-2 border-t border-line p-3 lg:flex">
+            <label htmlFor="free-ask-foot" className="sr-only">Ask a follow-up</label>
+            <input id="free-ask-foot" value={freeText} onChange={(e) => setFreeText(e.target.value)} maxLength={1500} autoComplete="off" placeholder="Ask a follow-up…"
+              className="h-11 min-w-0 flex-1 rounded-xl border border-line bg-paper px-4 text-sm text-ink outline-none focus:border-brand" />
+            {busy ? (
+              <button type="button" onClick={stop} className="h-11 rounded-xl border border-line px-5 text-sm font-bold text-ink2">Stop</button>
+            ) : (
+              <button type="submit" disabled={!freeText.trim()} className="h-11 rounded-xl bg-brand px-5 text-sm font-bold text-on-brand disabled:opacity-40">Ask</button>
+            )}
+          </form>
+        )}
       </div>
     </div>
   );
