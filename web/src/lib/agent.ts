@@ -45,7 +45,10 @@ HOW YOU WORK
 
 9. For questions about the story of his history (how it started, what was tried, what has repeated), read historyChapter and historyPattern and cite the chapter title or pattern. Where a pattern has timingOnly true, say "Timing only. The records don't show cause." Do not add facts that are not in them or in the records they point at.
 
+10. For a food that is not in his plan (no matching foodItem or dietRule), you may call usda_food_lookup once. Report its copper, sodium and fat per 100 g exactly as returned, and label them "USDA food data, not from his vet". Compare copper with the approved foods' copperMgPer100g in foodItem when you can. Never say a food is safe, fine or recommended for him: his plan gives no number for how much copper is too much, so say that, say the decision is his specialist's, and give a one-line question for the vet. Do not call it for foods his plan already covers.
+
 STYLE
+Do not narrate your lookups (no "I'll check…" or "Let me look…"). Write nothing until your lookups are done, then write only the answer.
 Plain, warm, short. Use his name. Use short paragraphs or a few bullets, under about 200 words unless asked for more. No hype, no medical jargon without a plain explanation. Do not describe your tools or how you work. The records are de-identified, so never ask for personal details.
 
 SOURCE LABELS
@@ -64,6 +67,42 @@ async function fetchWithTimeout(url: string, token: string, ms = 6000): Promise<
   } catch {
     return null;
   }
+}
+
+/**
+ * A narrow lookup of general nutrient data (copper, sodium, fat, calories, protein per 100 g) in USDA FoodData Central,
+ * for foods his plan does not cover. It is the only place the agent can reach outside his chart, and it returns food data
+ * only: it cannot say whether a food is right for him. USDA_API_KEY is optional; without it the shared demo key is used,
+ * which is rate-limited, and the tool says so when it is busy.
+ */
+const NUTRIENTS: Record<number, string> = { 1098: "copperMg", 1093: "sodiumMg", 1004: "fatG", 1008: "kcal", 1003: "proteinG" };
+function usdaTool(): ToolSet {
+  return {
+    usda_food_lookup: tool({
+      description:
+        "Look up a food's copper, sodium, fat, calories and protein per 100 g in USDA FoodData Central. Use it only for a food that is NOT already in his plan (foodItem or dietRule). It is general food data, not advice for him.",
+      inputSchema: z.object({ food: z.string().min(2).max(80).describe("A plain food name, for example 'mango' or 'cooked salmon'") }),
+      execute: async ({ food }) => {
+        const key = process.env.USDA_API_KEY || "DEMO_KEY";
+        try {
+          const res = await fetch(
+            `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${key}&query=${encodeURIComponent(food)}&dataType=Foundation,SR%20Legacy&pageSize=3`,
+            { signal: AbortSignal.timeout(7000) },
+          );
+          if (!res.ok) return { error: res.status === 429 ? "USDA food data is busy right now. Try again in a minute." : `USDA food data returned an error (${res.status}).` };
+          const json = (await res.json()) as { foods?: { fdcId: number; description: string; dataType: string; foodNutrients?: { nutrientId: number; value: number }[] }[] };
+          const results = (json.foods ?? []).slice(0, 3).map((f) => {
+            const per100g: Record<string, number> = {};
+            for (const n of f.foodNutrients ?? []) if (NUTRIENTS[n.nutrientId]) per100g[NUTRIENTS[n.nutrientId]] = n.value;
+            return { description: f.description, dataType: f.dataType, per100g, url: `https://fdc.nal.usda.gov/food-details/${f.fdcId}/nutrients` };
+          });
+          return results.length ? { source: "USDA FoodData Central", results } : { error: "USDA food data has no match for that food." };
+        } catch {
+          return { error: "USDA food data could not be reached." };
+        }
+      },
+    }),
+  };
 }
 
 /** Tools that run GROQ straight against the public dataset. Used when no Context MCP endpoint is configured. */
@@ -112,6 +151,7 @@ export async function buildAgent(): Promise<Built> {
         void _drop;
         Object.assign(tools, rest);
       }
+      Object.assign(tools, usdaTool());
       return {
         tools,
         instructions: `${INSTRUCTIONS}\n\nDATA REFERENCE\n${extra}`,
@@ -125,5 +165,5 @@ export async function buildAgent(): Promise<Built> {
   }
 
   // The fallback is kept on purpose, but it is never silent: the caller logs this reason, and the answer is labeled in the UI.
-  return { tools: directTools(), instructions: `${INSTRUCTIONS}\n${SCHEMA_SHEET}`, mode: "direct", close: async () => {}, fallbackReason };
+  return { tools: { ...directTools(), ...usdaTool() }, instructions: `${INSTRUCTIONS}\n${SCHEMA_SHEET}`, mode: "direct", close: async () => {}, fallbackReason };
 }

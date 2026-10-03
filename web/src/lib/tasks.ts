@@ -42,7 +42,7 @@ Also handle: a new lab result (compare it with his trend and the reference range
 Label timing patterns: "Timing only. The records don't show cause."`,
 
   eat: `TASK: "Can he eat this?"
-Check foodItem and dietRule first, then the guide (knowledge base) for diet entries. If his plan lists it, say so with the serving and kcal, and that treats share the 42 kcal a day limit and must be low in copper and sodium. If his plan does not cover it, decline: say the plan does not cover it, and give a one-line question for his vet. Never guess. If it touches the freeze-dried treat conflict, show both sides, labeled "Records disagree, needs confirmation".`,
+Check foodItem and dietRule first, then the guide (knowledge base) for diet entries. If his plan lists it, say so with the serving and kcal, and that treats share the 42 kcal a day limit and must be low in copper and sodium. If his plan does not cover it, say so first. Then call usda_food_lookup for its copper, sodium and fat, report the numbers per 100 g labeled "USDA food data, not from his vet", compare copper with the approved foods in foodItem where you can, say that whether it fits is his specialist's decision (never call it safe), and give a one-line question for his vet. Never guess a number. If it touches the freeze-dried treat conflict, show both sides, labeled "Records disagree, needs confirmation".`,
 
   sitter: `TASK: "I'm watching Theo." Write a short brief for a sitter.
 - Open with exactly this sentence: "The paperwork would get this wrong: ursodiol is on his written list, but don't give it."

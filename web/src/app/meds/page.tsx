@@ -35,7 +35,33 @@ export default async function MedsPage() {
 
       <div className="space-y-6">
         <Card title="Current written schedule" aside={listedOn ? `As of the ${fmtDate(listedOn)} specialist report` : undefined}>
-          <div className="overflow-x-auto">
+          {/* Phone: one card per drug, so nothing scrolls sideways. */}
+          <ul className="divide-y divide-line md:hidden">
+            {schedule.map((m) => {
+              const vet = vetTiming(m);
+              const times = routineTimes(m._id, routine);
+              const conflict = m.source?.confidence === "conflicting" && m.status === "active";
+              return (
+                <li key={m._id} className="space-y-2 py-4 first:pt-0 last:pb-0">
+                  <div>
+                    <p className="text-base font-bold text-ink">{m.name} <span className="font-normal text-ink2">{m.dose}</span></p>
+                    <p className="text-sm text-ink2">{doseLine(m)}</p>
+                  </div>
+                  {m.status === "listed-not-given" && <Chip tone="red">Listed, not being given</Chip>}
+                  {conflict && <Chip tone="red" wrap>Records disagree, needs confirmation</Chip>}
+                  {m.writtenInstruction && <p className="text-sm text-muted"><span className="font-semibold text-ink2">His vet wrote:</span> {m.writtenInstruction}</p>}
+                  <p className="text-sm text-muted">
+                    <span className="font-semibold text-ink2">When:</span>{" "}
+                    {vet && <>{SOURCE_LABEL.vet}: {vet}. </>}
+                    {times.length > 0 && <>{SOURCE_LABEL.routine}: {times.join(" and ")}.</>}
+                    {!vet && times.length === 0 && "Not given. See below."}
+                  </p>
+                  {m.purpose && <p className="text-sm text-muted"><span className="font-semibold text-ink2">For:</span> {m.purpose}</p>}
+                </li>
+              );
+            })}
+          </ul>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[620px] text-left text-sm">
               <caption className="sr-only">Medications on his current written list, with his vet&apos;s instruction and when each is given</caption>
               <thead className="text-xs uppercase tracking-wide text-muted">

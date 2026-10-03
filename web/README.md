@@ -56,6 +56,9 @@ Browser ── Ask page (useChat) ──> POST /api/chat  (Next.js route, rate-l
 - **Dataset** (project `yahsq70q`): 500 documents across 19 types. New in this version: `careRoutine` (the family's own daily times), `historySummary`, `historyChapter` and `historyPattern` (written from the records, each pointing at the visits, labs and medications it rests on), and `medication.writtenInstruction` / `timingNote` (the vet's own wording, kept apart from the family's routine). See `studio/schemaTypes/`.
 - **Request fields** (`POST /api/chat`): `messages`, plus three optional validated fields: `task` (`today`, `changed`, `eat`, `sitter`, `visit`, `free`), `today.date` (the visitor's local date, ignored if far from the server clock) and `checkins` (at most 14 entries, each field enumerated or length-capped). Check-ins go to the model marked as family-entered observations, inside delimiters, as data. Nothing is stored server-side.
 - **Task instructions** (`web/src/lib/tasks.ts`): one block per task. Warning signs come first for "Something changed"; past flares are framed as "During past flares, his records show…"; "Can he eat this" declines what the plan does not cover; the sitter brief opens with the ursodiol warning and ends with the phone-number reminder.
+- **Conversation:** one thread per browser tab, shared by the Ask page and the floating window, so follow-up questions work and it follows you between pages. It lives only in memory: closing the tab ends it, and nothing is saved. Earlier answers are sent back as text only, without their lookup results.
+- **USDA food lookup:** the one place the agent can reach outside his chart. `usda_food_lookup` reads USDA FoodData Central for copper, sodium, fat, calories and protein per 100 g, only for a food his plan does not cover. Its numbers are labeled "USDA food data, not from his vet", compared with the approved foods already in his plan, and never turned into "safe". Only the food name leaves the server. `USDA_API_KEY` is optional (without it the shared demo key is used and the tool says when it is busy).
+- **Today** answers "What does he need today?" with the Today page, not an agent run. It reads the visitor's clock: a "Due now" or "Next up" card, "Later today", and finished steps collapsed.
 - **Work trace** (`web/src/lib/trace.ts`): the agent's tool calls become plain-language steps ("Reading his medication list") while it works, and source chips that link to the matching page when it finishes.
 - **Knowledge Base:** built in the Sanity dashboard from the `guidance` and `dietRule` documents. Rebuild it after those documents change.
 - **Embeddings:** not enabled on the dataset. Retrieval from the Knowledge Base is keyword (BM25) search.
@@ -66,7 +69,7 @@ Browser ── Ask page (useChat) ──> POST /api/chat  (Next.js route, rate-l
 
 ## What can write to the dataset
 
-Nothing public. The web app has no mutations. The only POST route, `/api/chat`, writes rate-limit counters to Redis, not to the dataset. The Context endpoints are read-only. Writes happen only through `scripts/load_dataset.py` with an editor token.
+Nothing public. The web app has no mutations. The only POST route, `/api/chat`, writes rate-limit counters to Redis, not to the dataset. It stores no conversations. The Context endpoints are read-only. Writes happen only through `scripts/load_dataset.py` with an editor token.
 
 ## Run it
 

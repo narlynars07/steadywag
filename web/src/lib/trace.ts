@@ -83,6 +83,7 @@ export function traceSteps(lookups: Lookup[]): { text: string; done: boolean }[]
     const name = toolName(l);
     if (name === "knowledge_base_search" || name === "knowledge_base_read") add("Checking the guide", done);
     else if (name === "schema_explorer") add("Checking how his records are organized", done);
+    else if (name === "usda_food_lookup") add("Looking up USDA food data", done);
     else if (name === "array_field_reader") add("Reading a record in detail", done);
     else {
       const types = typesInQuery(queryText(l.input)).slice(0, 3);
@@ -123,6 +124,10 @@ export function sourceChips(lookups: Lookup[], usedCheckIns: boolean): { label: 
   for (const l of lookups) {
     const name = toolName(l);
     if (name.startsWith("knowledge_base")) seen.set("/guide", TYPE_CHIP.guidance);
+    if (name === "usda_food_lookup") {
+      const url = (l.output as { results?: { url?: string }[] } | undefined)?.results?.[0]?.url;
+      if (url) seen.set(url, { label: "USDA FoodData Central", href: url });
+    }
     for (const t of recordTypes(l.output).keys()) seen.set(TYPE_CHIP[t].href, TYPE_CHIP[t]);
   }
   if (usedCheckIns) seen.set("/check-in", { label: "Your check-ins", href: "/check-in" });

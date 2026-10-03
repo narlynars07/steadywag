@@ -30,10 +30,10 @@ export function ChatDock({ profile }: { profile: AskProfile }) {
       {!open && (
         <button
           ref={openerRef} type="button" onClick={() => { setOpen(true); setUsed(true); }} aria-label="Open the Steadywag chat" aria-haspopup="dialog"
-          className="fixed bottom-24 right-4 z-40 flex min-h-14 items-center gap-2 rounded-full bg-brand px-5 text-[15px] font-bold text-on-brand shadow-[0_8px_24px_rgba(23,19,42,0.25)] md:bottom-6 md:right-6"
+          className="fixed bottom-24 right-4 z-40 flex h-14 w-14 items-center justify-center gap-2 rounded-full bg-brand text-[15px] font-bold text-on-brand shadow-[0_8px_24px_rgba(23,19,42,0.25)] md:bottom-6 md:right-6 md:w-auto md:px-5"
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" /></svg>
-          Ask about Theo
+          <span className="hidden md:inline">Ask about Theo</span>
         </button>
       )}
       {used && (
@@ -48,7 +48,7 @@ export function ChatDock({ profile }: { profile: AskProfile }) {
             </button>
           </div>
           <div className="flex-1 overflow-y-auto p-4">
-            <AskApp profile={profile} compact />
+            <AskApp profile={profile} compact onNavigate={() => setOpen(false)} />
           </div>
         </div>
       )}

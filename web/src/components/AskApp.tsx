@@ -1,10 +1,11 @@
 "use client";
 
-import { useChat } from "@ai-sdk/react";
+import { Chat, useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Rich } from "./Rich";
 import { SourcesPanel, type AgentMode } from "./SourcesPanel";
 import { checkInsSince, parse, snapshot } from "@/lib/checkins";
@@ -23,6 +24,30 @@ export interface AskProfile {
   lastVisitDate: string | null;
 }
 
+/**
+ * One conversation for the whole visit, shared by the Ask page and the floating window, so it follows you between pages.
+ * It lives only in this browser tab's memory: closing the tab ends it, and nothing is saved anywhere.
+ * Earlier answers are sent back as text only (no lookup results), which keeps follow-up questions fast and cheap.
+ */
+let sharedChat: Chat<ChatMessage> | null = null;
+function getChat(): Chat<ChatMessage> {
+  sharedChat ??= new Chat<ChatMessage>({
+    transport: new DefaultChatTransport<ChatMessage>({
+      api: "/api/chat",
+      prepareSendMessagesRequest: ({ messages, body }) => ({
+        body: {
+          ...body,
+          messages: messages.map((m) => (m.role === "assistant" ? { ...m, parts: m.parts.filter((p) => p.type === "text") } : m)),
+        },
+      }),
+    }),
+  });
+  return sharedChat;
+}
+const session: { task: Task | null; checkins: unknown[] | undefined; usedCheckIns: boolean } = { task: null, checkins: undefined, usedCheckIns: false };
+/** What the current conversation started with (its task and any check-ins it sends). Shared like the chat itself. */
+function setSession(next: Partial<typeof session>) { Object.assign(session, next); }
+
 const ICON = { width: 22, height: 22, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true };
 const TASK_CARDS: { task: Task; title: string; sub: string; icon: ReactNode }[] = [
   { task: "changed", title: "Something changed", sub: "Check it against his history", icon: <svg {...ICON}><path d="M3 12h4l3-7 4 14 3-7h4" /></svg> },
@@ -33,6 +58,7 @@ const TASK_CARDS: { task: Task; title: string; sub: string; icon: ReactNode }[] 
 
 const URGENT =
   "If he stops eating for a day, vomits more than once, has blood or black stool, yellow gums, or seems very unwell, contact his vet or an emergency vet now.";
+const SUGGESTED = ["Is his ALT trend moving the right way?", "Are his freeze-dried treats allowed?", "What did he eat before his diagnosis?", "What has been recommended and not done?"];
 
 function Spinner() {
   return (
@@ -49,38 +75,50 @@ function Check() {
   );
 }
 
-export function AskApp({ profile, initialQuestion, autorun, compact = false }: { profile: AskProfile; initialQuestion?: string; autorun?: boolean; compact?: boolean }) {
-  const transport = useMemo(() => new DefaultChatTransport<ChatMessage>({ api: "/api/chat" }), []);
-  const { messages, setMessages, sendMessage, status, error, stop, clearError } = useChat<ChatMessage>({ transport });
+export function AskApp({ profile, initialQuestion, autorun, compact = false, onNavigate }: { profile: AskProfile; initialQuestion?: string; autorun?: boolean; compact?: boolean; onNavigate?: () => void }) {
+  const { messages, setMessages, sendMessage, status, error, stop, clearError } = useChat<ChatMessage>({ chat: getChat() });
+  const router = useRouter();
   const day = useLocalDay();
   const busy = status === "submitted" || status === "streaming";
 
-  const [view, setView] = useState<"home" | "input" | "answer">("home");
-  const [task, setTask] = useState<Task | null>(null);
+  const [pending, setPending] = useState<"changed" | "eat" | null>(null); // the small form before a task starts
   const [changedText, setChangedText] = useState("He skipped dinner and seems tired");
   const [eatText, setEatText] = useState("Blueberries");
   const [freeText, setFreeText] = useState(initialQuestion ?? "");
-  const [sentCheckIns, setSentCheckIns] = useState(false);
   const freeRef = useRef<HTMLInputElement>(null);
+  const lastUserRef = useRef<HTMLDivElement>(null);
+  const threadStarted = messages.length > 0;
 
+  const bodyFor = (t: Task) => ({ today: { date: day || new Date().toISOString().slice(0, 10) }, task: t, ...(session.checkins?.length ? { checkins: session.checkins } : {}) });
 
+  /** Starts a new conversation with a task or a first question. */
   const run = (t: Task, text = "") => {
     if ((t === "changed" || t === "eat" || t === "free") && !text.trim()) return;
     if (busy) stop();
     clearError();
     setMessages([]);
-    setTask(t);
-    setView("answer");
-    const date = day || new Date().toISOString().slice(0, 10);
+    setPending(null);
     let checkins: unknown[] | undefined;
     if (t === "visit") {
       const list = checkInsSince(parse(snapshot()), profile.lastVisitDate);
-      setSentCheckIns(list.length > 0);
-      checkins = list.map(({ date: d, appetite, energy, stool, vomit, meds, note }) => ({ date: d, appetite, energy, stool, vomit, meds, note }));
-    } else setSentCheckIns(false);
-    void sendMessage({ text: taskQuestion(t, text) }, { body: { today: { date }, task: t, ...(checkins?.length ? { checkins } : {}) } });
+      checkins = list.length ? list.map(({ date: d, appetite, energy, stool, vomit, meds, note }) => ({ date: d, appetite, energy, stool, vomit, meds, note })) : undefined;
+    }
+    setSession({ task: t, checkins, usedCheckIns: !!checkins });
+    void sendMessage({ text: taskQuestion(t, text) }, { body: { ...bodyFor(t), ...(checkins ? { checkins } : {}) } });
   };
-  const back = () => { if (busy) stop(); clearError(); setMessages([]); setTask(null); setView("home"); };
+
+  /** Sends what is typed: a follow-up in the same conversation, or a first question if there isn't one yet. */
+  const send = (text: string) => {
+    const v = text.trim();
+    if (!v || busy) return;
+    setFreeText("");
+    if (!threadStarted) { run("free", v); return; }
+    clearError();
+    void sendMessage({ text: v }, { body: bodyFor("free") });
+  };
+
+  const back = () => { if (busy) stop(); clearError(); setMessages([]); setPending(null); setSession({ task: null, checkins: undefined, usedCheckIns: false }); };
+  const goToday = () => { router.push("/today"); onNavigate?.(); };
 
   // "Ask about this chapter" links arrive with ?q=...&go=1 and ask straight away. A plain ?q= only fills the box.
   const started = useRef(false);
@@ -91,54 +129,45 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false }: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialQuestion, autorun]);
 
+  // When a new question is sent, bring it to the top of the view so its answer streams in underneath it.
+  const userCount = messages.filter((m) => m.role === "user").length;
+  useEffect(() => { if (userCount > 0) lastUserRef.current?.scrollIntoView({ block: "start", behavior: "smooth" }); }, [userCount]);
+
   const backCls = compact ? "" : "lg:hidden";
 
-  // ---- Answer view ----
-  const renderAnswer = () => {
-    const question = messages.find((m) => m.role === "user")?.parts.map((p) => (p.type === "text" ? p.text : "")).join("") ?? "";
-    const assistant = [...messages].reverse().find((m) => m.role === "assistant");
-    const lookups = assistant?.parts.filter(isLookup) ?? [];
-    const text = assistant?.parts.map((p) => (p.type === "text" ? p.text : "")).join("") ?? "";
+  // ---- The conversation ----
+  const renderAssistant = (m: ChatMessage, isLast: boolean) => {
+    const lookups = m.parts.filter(isLookup);
+    // Only the text after the last lookup is the answer. Anything written before or between lookups is the agent thinking aloud.
+    const lastLookup = m.parts.map((p) => isLookup(p)).lastIndexOf(true);
+    const text = m.parts.slice(lastLookup + 1).map((p) => (p.type === "text" ? p.text : "")).join("");
     const steps = traceSteps(lookups);
-    const allToolsDone = lookups.every(isDone);
+    const live = isLast && busy;
     const rows = [...steps];
-    if (busy && rows.length === 0) rows.push({ text: "Getting started", done: false });
-    if (busy && rows.length > 0 && allToolsDone) rows.push({ text: text ? "Writing the answer" : "Putting the answer together", done: false });
-    const finished = !busy && text.length > 0;
-    const chips = finished ? sourceChips(lookups, sentCheckIns) : [];
-
+    if (live && rows.length === 0) rows.push({ text: "Getting started", done: false });
+    if (live && rows.length > 0 && lookups.every(isDone)) rows.push({ text: text ? "Writing the answer" : "Putting the answer together", done: false });
+    const finished = !live && text.length > 0;
+    const chips = finished ? sourceChips(lookups, isLast && session.usedCheckIns) : [];
     return (
-      <div className="flex flex-col gap-3.5">
-        <button type="button" onClick={back} className={`flex min-h-11 items-center gap-1.5 self-start text-sm font-semibold text-brand2 ${backCls}`}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
-          All tasks
-        </button>
-        {question && <div className="max-w-[85%] self-end rounded-2xl rounded-br-sm bg-brand px-3.5 py-2.5 text-[15px] leading-snug text-on-brand">{question}</div>}
-
-        {task === "changed" && (
-          <div role="note" className="rounded-2xl border border-red/30 bg-red-soft px-3.5 py-3 text-sm leading-snug text-red"><strong className="font-semibold">Check first.</strong> {URGENT}</div>
-        )}
-
-        {assistant?.metadata?.agentMode === "direct" && (
+      <div key={m.id} className="flex flex-col gap-3.5">
+        {m.metadata?.agentMode === "direct" && (
           <p role="note" className="rounded-xl bg-amber-soft px-3.5 py-2.5 text-sm text-amber">
             <strong className="font-semibold">Direct query, not Sanity Context.</strong> Sanity Context was unavailable for this answer, so it was read straight from the same public dataset. The Knowledge Base was not used.
           </p>
         )}
-
-        <section aria-live="polite" className="rounded-2xl border border-line bg-surface px-3.5 py-3">
-          <p className="text-xs font-bold uppercase tracking-wide text-muted">{finished ? "What I checked" : "Working…"}</p>
-          <ul className="mt-2 space-y-2">
-            {(finished ? steps : rows).map((s) => (
-              <li key={s.text} className="flex items-center gap-2 text-sm text-ink2">
-                {s.done || finished ? <Check /> : <Spinner />}
-                <span>{s.text}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        {error && <p role="alert" className="rounded-xl bg-red-soft px-4 py-3 text-sm text-red">{friendly(error)}</p>}
-
+        {(live || steps.length > 0) && (
+          <section aria-live="polite" className="rounded-2xl border border-line bg-surface px-3.5 py-3">
+            <p className="text-xs font-bold uppercase tracking-wide text-muted">{finished ? "What I checked" : "Working…"}</p>
+            <ul className="mt-2 space-y-2">
+              {(finished ? steps : rows).map((s) => (
+                <li key={s.text} className="flex items-center gap-2 text-sm text-ink2">
+                  {s.done || finished ? <Check /> : <Spinner />}
+                  <span>{s.text}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
         {text && (
           <div className="rounded-2xl border border-line bg-surface p-4 text-[15px] leading-relaxed text-ink">
             <Rich text={text} />
@@ -146,23 +175,72 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false }: {
               <div className="mt-3 border-t border-line pt-3">
                 <p className="text-xs font-bold uppercase tracking-wide text-muted">Sources</p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  {chips.map((c) => (
-                    <Link key={c.href} href={c.href} className="flex min-h-9 items-center rounded-full bg-brand-soft px-3 text-xs font-semibold text-brand2 hover:underline">{c.label}</Link>
-                  ))}
+                  {chips.map((c) =>
+                    c.href.startsWith("http") ? (
+                      <a key={c.href} href={c.href} target="_blank" rel="noreferrer" className="flex min-h-9 items-center rounded-full bg-brand-soft px-3 text-xs font-semibold text-brand2 hover:underline">{c.label} ↗</a>
+                    ) : (
+                      <Link key={c.href} href={c.href} className="flex min-h-9 items-center rounded-full bg-brand-soft px-3 text-xs font-semibold text-brand2 hover:underline">{c.label}</Link>
+                    ),
+                  )}
                 </div>
               </div>
             )}
-            {finished && lookups.length > 0 && <SourcesPanel lookups={lookups} mode={assistant?.metadata?.agentMode} />}
+            {finished && lookups.length > 0 && <SourcesPanel lookups={lookups} mode={m.metadata?.agentMode} />}
           </div>
         )}
-        <p className="text-xs leading-relaxed text-muted">Steadywag tracks and prepares. It never diagnoses, doses, or replaces his vet.</p>
       </div>
     );
   };
 
-  // ---- Input sheet (Something changed, Can he eat this?) ----
+  const composer = (hideOnDesktop: boolean) => (
+    <form
+      onSubmit={(e) => { e.preventDefault(); send(freeText); }}
+      className={`sticky z-10 flex gap-2 rounded-2xl border border-line bg-surface p-2 shadow-[0_4px_16px_rgba(23,19,42,0.12)] ${compact ? "bottom-0" : "bottom-[4.75rem] md:bottom-4"} ${hideOnDesktop && !compact ? "lg:hidden" : ""}`}
+    >
+      <label htmlFor="follow-up" className="sr-only">Ask a follow-up question</label>
+      <input id="follow-up" value={freeText} onChange={(e) => setFreeText(e.target.value)} maxLength={1500} autoComplete="off" placeholder="Ask a follow-up…"
+        className="h-11 min-w-0 flex-1 rounded-xl bg-paper px-3.5 text-[15px] text-ink outline-none focus:ring-2 focus:ring-brand" />
+      {busy ? (
+        <button type="button" onClick={stop} className="h-11 rounded-xl border border-line px-4 text-sm font-bold text-ink2">Stop</button>
+      ) : (
+        <button type="submit" disabled={!freeText.trim()} className="h-11 rounded-xl bg-brand px-4 text-sm font-bold text-on-brand disabled:opacity-40">Send</button>
+      )}
+    </form>
+  );
+
+  const renderThread = () => (
+    <div className="flex flex-col gap-3.5">
+      <button type="button" onClick={back} className={`flex min-h-11 items-center gap-1.5 self-start text-sm font-semibold text-brand2 ${backCls}`}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+        New question
+      </button>
+      {session.task === "changed" && (
+        <div role="note" className="rounded-2xl border border-red/30 bg-red-soft px-3.5 py-3 text-sm leading-snug text-red"><strong className="font-semibold">Check first.</strong> {URGENT}</div>
+      )}
+      {messages.map((m, i) =>
+        m.role === "user" ? (
+          <div key={m.id} ref={i === messages.findLastIndex((x) => x.role === "user") ? lastUserRef : undefined} className="max-w-[85%] scroll-mt-4 self-end rounded-2xl rounded-br-sm bg-brand px-3.5 py-2.5 text-[15px] leading-snug text-on-brand">
+            {m.parts.map((p) => (p.type === "text" ? p.text : "")).join("")}
+          </div>
+        ) : (
+          renderAssistant(m, i === messages.length - 1)
+        ),
+      )}
+      {busy && messages.at(-1)?.role === "user" && (
+        <section aria-live="polite" className="rounded-2xl border border-line bg-surface px-3.5 py-3">
+          <p className="text-xs font-bold uppercase tracking-wide text-muted">Working…</p>
+          <p className="mt-2 flex items-center gap-2 text-sm text-ink2"><Spinner /> Getting started</p>
+        </section>
+      )}
+      {error && <p role="alert" className="rounded-xl bg-red-soft px-4 py-3 text-sm text-red">{friendly(error)}</p>}
+      <p className="text-xs leading-relaxed text-muted">Steadywag tracks and prepares. It never diagnoses, doses, or replaces his vet.</p>
+      {composer(true)}
+    </div>
+  );
+
+  // ---- The small form before "Something changed" or "Can he eat this?" ----
   const renderInput = () => {
-    const isEat = task === "eat";
+    const isEat = pending === "eat";
     const value = isEat ? eatText : changedText;
     return (
       <div className="flex flex-col gap-4">
@@ -174,7 +252,7 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false }: {
         <p className="text-[15px] leading-relaxed text-ink2">
           {isEat ? "I'll check it against his diet plan and flag anything his records disagree on." : "Tell me what you noticed. I'll check it against his history and help you talk to his vet. I won't diagnose."}
         </p>
-        <form onSubmit={(e) => { e.preventDefault(); run(task as Task, value); }} className="flex flex-col gap-3">
+        <form onSubmit={(e) => { e.preventDefault(); run(pending as Task, value); }} className="flex flex-col gap-3">
           <label htmlFor="sheet-input" className="text-[13px] font-semibold text-ink2">{isEat ? "Food or treat" : "What changed?"}</label>
           <input
             id="sheet-input" value={value} maxLength={400} autoComplete="off"
@@ -221,11 +299,12 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false }: {
         </div>
       )}
 
-      <button type="button" onClick={() => run("today")} className="flex min-h-16 w-full items-center gap-3 rounded-2xl bg-brand p-4 text-left text-on-brand">
+      {/* The plan for the day is on the Today page: faster and easier to scan than an agent answer. */}
+      <button type="button" onClick={goToday} className="flex min-h-16 w-full items-center gap-3 rounded-2xl bg-brand p-4 text-left text-on-brand">
         <svg {...ICON} width={24} height={24}><rect x="4" y="5" width="16" height="15" rx="2" /><path d="M4 10h16M9 3v4M15 3v4" /></svg>
         <span className="flex flex-col gap-0.5">
           <span className="text-base font-bold">What does he need today?</span>
-          <span className="text-[13px] text-on-brand/85">Meds, food and anything to watch</span>
+          <span className="text-[13px] text-on-brand/85">Opens his plan for the day</span>
         </span>
       </button>
 
@@ -233,7 +312,7 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false }: {
         {TASK_CARDS.map((c) => (
           <button
             key={c.task} type="button"
-            onClick={() => (c.task === "sitter" || c.task === "visit" ? run(c.task) : (setTask(c.task), setView("input")))}
+            onClick={() => (c.task === "sitter" || c.task === "visit" ? run(c.task) : setPending(c.task as "changed" | "eat"))}
             className={`flex min-h-[104px] flex-col gap-2 rounded-2xl border border-line bg-surface p-3.5 text-left text-brand2 ${compact ? "" : "lg:min-h-16 lg:flex-row lg:items-center lg:gap-3"}`}
           >
             {c.icon}
@@ -245,7 +324,7 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false }: {
         ))}
       </div>
 
-      <form onSubmit={(e) => { e.preventDefault(); run("free", freeText); }} className={`flex flex-col gap-2 ${compact ? "" : "lg:hidden"}`}>
+      <form onSubmit={(e) => { e.preventDefault(); send(freeText); }} className={`flex flex-col gap-2 ${compact ? "" : "lg:hidden"}`}>
         <label htmlFor="free-ask" className="text-[13px] font-semibold text-ink2">Or ask anything about Theo</label>
         <div className="flex gap-2">
           <input
@@ -266,41 +345,45 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false }: {
     </div>
   );
 
-  // Compact (the floating window) shows one screen at a time. The full page shows the tasks and the conversation side by side on desktop.
-  const right = view === "answer" ? renderAnswer() : view === "input" && (task === "changed" || task === "eat") ? renderInput() : null;
+  // Compact (the floating window) shows one screen at a time. The full page shows the tasks and the chat side by side on desktop.
+  const right = threadStarted ? renderThread() : pending ? renderInput() : null;
   if (compact) return right ?? renderHome();
-  const SUGGESTED = ["Is his ALT trend moving the right way?", "Are his freeze-dried treats allowed?", "What did he eat before his diagnosis?", "What has been recommended and not done?"];
   return (
     <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] lg:items-start">
       <div className={right ? "hidden lg:block" : ""}>{renderHome()}</div>
       <div className={`${right ? "" : "hidden lg:flex"} flex-col lg:sticky lg:top-24 lg:h-[calc(100vh-8rem)] lg:min-h-[520px] lg:overflow-hidden lg:rounded-2xl lg:border lg:border-line lg:bg-surface`}>
         <div className="hidden items-center gap-3 border-b border-line px-4 py-3 lg:flex">
           <Image src="/theo.jpg" alt="" width={72} height={72} loading="eager" className="h-10 w-10 rounded-full object-cover object-[50%_30%] shadow-[0_0_0_2px_var(--brand)]" />
-          <div>
+          <div className="min-w-0 flex-1">
             <p className="text-base font-extrabold tracking-tight text-ink">Ask about Theo</p>
             <p className="text-xs text-muted">Answers come from his records, with the sources shown</p>
           </div>
+          {threadStarted && <button type="button" onClick={back} className="min-h-11 rounded-full px-3 text-sm font-semibold text-brand2 hover:bg-brand-soft">New question</button>}
         </div>
         <div className="lg:flex-1 lg:overflow-y-auto lg:p-5">
           {right ?? (
             <div className="flex flex-col gap-4">
               <div>
                 <p className="text-lg font-extrabold tracking-tight text-ink">Pick a task on the left, or ask anything below.</p>
-                <p className="mt-1 text-[15px] leading-relaxed text-ink2">The answer appears here, with what I checked and where each part came from. Try one of these:</p>
+                <p className="mt-1 text-[15px] leading-relaxed text-ink2">The answer appears here, with what I checked and where each part came from. You can keep asking follow-ups. Try one of these:</p>
               </div>
               <div className="flex flex-wrap gap-2">
                 {SUGGESTED.map((q) => (
-                  <button key={q} type="button" onClick={() => { setFreeText(q); run("free", q); }} className="min-h-11 rounded-full border border-line bg-paper px-4 text-sm font-semibold text-brand2 hover:bg-brand-soft">{q}</button>
+                  <button key={q} type="button" onClick={() => send(q)} className="min-h-11 rounded-full border border-line bg-paper px-4 text-sm font-semibold text-brand2 hover:bg-brand-soft">{q}</button>
                 ))}
               </div>
             </div>
           )}
         </div>
-        <form onSubmit={(e) => { e.preventDefault(); run("free", freeText); }} className="hidden gap-2 border-t border-line p-3 lg:flex">
+        <form onSubmit={(e) => { e.preventDefault(); send(freeText); }} className="hidden gap-2 border-t border-line p-3 lg:flex">
           <label htmlFor="free-ask-lg" className="sr-only">Ask anything about Theo</label>
-          <input id="free-ask-lg" value={freeText} onChange={(e) => setFreeText(e.target.value)} maxLength={1500} autoComplete="off" placeholder="Ask anything about Theo…"
+          <input id="free-ask-lg" value={freeText} onChange={(e) => setFreeText(e.target.value)} maxLength={1500} autoComplete="off" placeholder={threadStarted ? "Ask a follow-up…" : "Ask anything about Theo…"}
             className="h-12 min-w-0 flex-1 rounded-xl border border-line bg-paper px-4 text-[15px] text-ink outline-none focus:border-brand" />
-          <button type="submit" disabled={!freeText.trim() || busy} className="h-12 rounded-xl bg-brand px-5 text-[15px] font-bold text-on-brand disabled:opacity-40">Ask</button>
+          {busy ? (
+            <button type="button" onClick={stop} className="h-12 rounded-xl border border-line px-5 text-[15px] font-bold text-ink2">Stop</button>
+          ) : (
+            <button type="submit" disabled={!freeText.trim()} className="h-12 rounded-xl bg-brand px-5 text-[15px] font-bold text-on-brand disabled:opacity-40">Ask</button>
+          )}
         </form>
       </div>
     </div>
