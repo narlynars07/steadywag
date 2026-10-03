@@ -203,7 +203,7 @@ export function Chat({ initialQuestion }: { initialQuestion?: string }) {
         <div ref={bottom} />
       </div>
 
-      <form onSubmit={(e) => { e.preventDefault(); send(input); }} className="sticky bottom-3 flex gap-2 rounded-2xl border border-line bg-surface p-2 shadow-sm">
+      <form onSubmit={(e) => { e.preventDefault(); send(input); }} className="sticky bottom-24 flex gap-2 rounded-2xl md:bottom-3 border border-line bg-surface p-2 shadow-sm">
         <label htmlFor="ask" className="sr-only">Your question</label>
         <input id="ask" value={input} onChange={(e) => setInput(e.target.value)} maxLength={1500} placeholder="Ask about his labs, meds, food, or visits…" className="min-w-0 flex-1 bg-transparent px-3 py-2 outline-none" autoComplete="off" autoFocus={Boolean(initialQuestion)} />
         {busy ? (

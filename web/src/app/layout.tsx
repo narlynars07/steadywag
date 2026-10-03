@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Nav } from "@/components/Nav";
+import { SubNav } from "@/components/SubNav";
+import { ChatDock } from "@/components/ChatDock";
+import { getDockProfile } from "@/lib/data";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 const jetbrains = JetBrains_Mono({ variable: "--font-jetbrains", subsets: ["latin"] });
@@ -14,7 +17,8 @@ export const metadata: Metadata = {
     "Track a dog with a chronic illness, see what the records say and what they don't, and walk into every vet visit prepared. Built on Sanity.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const dock = await getDockProfile().catch(() => ({ alert: null, lastVisitDate: null }));
   return (
     // suppressHydrationWarning: browser extensions often add attributes to <html> before React loads.
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${jetbrains.variable} h-full antialiased`}>
@@ -23,12 +27,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           Skip to content
         </a>
         <Nav />
-        <main id="main" className="mx-auto w-full max-w-5xl flex-1 px-4 pb-20 pt-6 sm:px-6">
+        <main id="main" className="mx-auto w-full max-w-5xl flex-1 px-4 pb-8 pt-5 sm:px-6">
+          <SubNav />
           {children}
         </main>
-        <footer className="no-print border-t border-line px-4 py-6 text-center text-sm text-muted">
+        <footer className="no-print border-t border-line px-4 pb-28 pt-6 text-center text-sm text-muted md:pb-6">
           Steadywag tracks and prepares. It never diagnoses, doses, or replaces his vet. Records are de-identified.
         </footer>
+        <ChatDock profile={{ name: "Theo", line: "", status: "", alert: dock.alert ?? undefined, lastVisitDate: dock.lastVisitDate }} />
       </body>
     </html>
   );

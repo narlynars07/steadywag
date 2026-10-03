@@ -39,8 +39,8 @@ export function LabExplorer({ tests, results }: { tests: LabTestSummary[]; resul
   const log = logPref ?? autoLog;
 
   return (
-    <div className="grid gap-6 md:grid-cols-[220px_1fr]">
-      <nav aria-label="Lab tests" className="space-y-4 md:sticky md:top-28 md:self-start">
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-[220px_minmax(0,1fr)]">
+      <nav aria-label="Lab tests" className="space-y-4 md:sticky md:top-20 md:self-start">
         {grouped.map((g) => (
           <div key={g.category}>
             <h2 className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted">{CATEGORY_LABEL[g.category]}</h2>

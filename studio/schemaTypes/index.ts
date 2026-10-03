@@ -14,6 +14,10 @@ import {guidance} from './documents/guidance'
 import {vetQuestion} from './documents/vetQuestion'
 import {recordGap} from './documents/recordGap'
 import {dietHistoryEntry} from './documents/dietHistoryEntry'
+import {careRoutine} from './documents/careRoutine'
+import {historySummary} from './documents/historySummary'
+import {historyChapter} from './documents/historyChapter'
+import {historyPattern} from './documents/historyPattern'
 
 export const schemaTypes = [
   // objects
@@ -34,4 +38,8 @@ export const schemaTypes = [
   vetQuestion,
   recordGap,
   dietHistoryEntry,
+  careRoutine,
+  historySummary,
+  historyChapter,
+  historyPattern,
 ]

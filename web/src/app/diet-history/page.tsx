@@ -6,7 +6,8 @@ import { fmtDate } from "@/lib/format";
 export const metadata = { title: "Diet history · Steadywag" };
 export const revalidate = 60;
 
-export default async function DietHistoryPage() {
+export default async function DietHistoryPage({ searchParams }: PageProps<"/diet-history">) {
+  const example = (await searchParams).example === "1";
   const [dog, meds, history] = await Promise.all([getDog(), getMedications(), getDietHistory()]);
 
   const current = [...new Set(meds.filter((m) => m.status === "active").map((m) => m.name))];
@@ -20,11 +21,27 @@ export default async function DietHistoryPage() {
     from: h.startedOn ?? "",
     to: h.endedOn ?? "",
   }));
-  const provenance = adults.map((h, i) =>
-    h.origin === "family-recall"
-      ? `Row ${i + 1}: family recall, as the family told the nutrition service${h.source?.documentDate ? ` (written into the ${fmtDate(h.source.documentDate)} consult)` : ""}. Not a medical finding, and not checked against receipts or labels.`
-      : `Row ${i + 1}: from a medical record${h.source?.documentDate ? ` (the ${fmtDate(h.source.documentDate)} nutrition consult)` : ""}.`,
-  );
+  const treats = history.filter((h) => h.section === "treat");
+  const supps = history.filter((h) => h.section === "supplement");
+  const treatRows = treats.map((h) => ({
+    name: h.brand ?? "",
+    often: h.formula ?? "",
+    notes: [h.startedOn && `From ${h.startedOn}`, h.endedOn && `to ${h.endedOn}`].filter(Boolean).join(" "),
+  }));
+  const suppRows = supps.map((h) => ({
+    name: h.brand ?? "",
+    duration: [h.startedOn && `Started ${h.startedOn}.`, h.endedOn && `${h.endedOn}.`].filter(Boolean).join(" "),
+    source: h.source?.note ?? "",
+  }));
+  const provenance = [
+    ...adults.map((h, i) =>
+      h.origin === "family-recall"
+        ? `Diet row ${i + 1}: family recall, as the family told the nutrition service${h.source?.documentDate ? ` (written into the ${fmtDate(h.source.documentDate)} consult)` : ""}. Not a medical finding, and not checked against receipts or labels.`
+        : `Diet row ${i + 1}: from a medical record${h.source?.documentDate ? ` (the ${fmtDate(h.source.documentDate)} nutrition consult)` : ""}.`,
+    ),
+    ...(treats.length ? [`Treats and human foods: family recall from the same consult. Not a medical finding.`] : []),
+    ...(supps.length ? [`Supplements: from his medical records (his medication lists and the nutrition consult).`] : []),
+  ];
 
   // Everything prefilled here is already in his de-identified medical records:
   // the January 20 and February 17, 2023 specialist reports, the March 10, 2023 biopsy report,
@@ -56,18 +73,8 @@ export default async function DietHistoryPage() {
     },
     rows: {
       adult: adultRows,
-      treats: [
-        {
-          name: "Before diagnosis: partly in his records (the August 2023 nutrition consult lists some treats and human foods).",
-          notes: "The family will add the full list.",
-        },
-      ],
-      supps: [
-        { name: "Denamarin (liver support)", duration: "Started November 2022. Not on his list after early 2023.", source: "" },
-        { name: "Vitamin B12", duration: "Injections in early 2023, then daily by mouth. Not listed after 2023.", source: "" },
-        { name: "Zinc (part of the original home-cooked recipe)", duration: "August to September 29, 2023. Stopped on the specialist's advice.", source: "" },
-        { name: "Multivitamin and fish oil (part of the home-cooked recipe)", duration: "Since August 2023", source: "From the nutrition service recipe" },
-      ],
+      treats: treatRows,
+      supps: suppRows,
     },
   };
 
@@ -80,7 +87,7 @@ export default async function DietHistoryPage() {
       <p className="-mt-3 mb-6 max-w-2xl text-ink2">
         Researchers are studying whether dietary copper contributes to liver copper buildup, which is why the diet <strong className="font-semibold">before</strong> diagnosis matters most.
       </p>
-      <DietHistory defaults={defaults} provenance={provenance} />
+      <DietHistory defaults={defaults} provenance={provenance} example={example} />
     </>
   );
 }

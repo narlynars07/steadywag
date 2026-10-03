@@ -41,9 +41,10 @@ const TONES = {
   green: "bg-green-soft text-green border-transparent",
 } as const;
 
-export function Chip({ tone = "neutral", children, title }: { tone?: keyof typeof TONES; children: ReactNode; title?: string }) {
+export function Chip({ tone = "neutral", children, title, wrap }: { tone?: keyof typeof TONES; children: ReactNode; title?: string; wrap?: boolean }) {
+  // Short chips stay on one line. A long one (a full condition name) can opt in to wrapping so it never pushes the page wider than the screen.
   return (
-    <span title={title} className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-medium ${TONES[tone]}`}>
+    <span title={title} className={`inline-flex max-w-full items-center gap-1 ${wrap ? "whitespace-normal" : "whitespace-nowrap"} rounded-full border px-2.5 py-0.5 text-xs font-medium ${TONES[tone]}`}>
       {children}
     </span>
   );

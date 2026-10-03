@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Card, Chip } from "./ui";
 import { useLocalDay } from "@/lib/useLocalDay";
@@ -336,20 +337,24 @@ function Step({ n, title, children }: { n: number; title: string; children: Reac
   );
 }
 
-export function DietHistory({ defaults, ageHint, provenance }: { defaults: Form; ageHint?: string; provenance?: string[] }) {
+export function DietHistory({ defaults, ageHint, provenance, example = false }: { defaults: Form; ageHint?: string; provenance?: string[]; example?: boolean }) {
   const raw = useSyncExternalStore(subscribe, snapshot, () => "");
-  const form = useMemo(() => merge(defaults, raw), [defaults, raw]);
+  // Every prefilled key set to empty, so nothing of Theo's remains for someone using the form for their own dog.
+  const blank = useMemo<Form>(() => ({
+    a: Object.fromEntries(Object.keys(defaults.a).map((k) => [k, ""])),
+    rows: { adult: [], treats: [], supps: [] },
+  }), [defaults]);
+  // The form starts blank. Theo's answers load only from "See Theo's example", and that copy lives in memory:
+  // it never touches the family's saved answers and is never saved.
+  const [exampleForm, setExampleForm] = useState<Form>(defaults);
+  const stored = useMemo(() => merge(blank, raw), [blank, raw]);
+  const form = example ? exampleForm : stored;
   const day = useLocalDay();
   const [copied, setCopied] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
 
-  const commit = (next: Form) => save(JSON.stringify(next));
-  // Every prefilled key set to empty, so nothing of Theo's remains for someone using the form for their own dog.
-  const blank: Form = {
-    a: Object.fromEntries(Object.keys(defaults.a).map((k) => [k, ""])),
-    rows: { adult: [], treats: [], supps: [] },
-  };
-  const isExample = !!defaults.a.dogName && form.a.dogName === defaults.a.dogName;
+  const commit = (next: Form) => (example ? setExampleForm(next) : save(JSON.stringify(next)));
+  const isExample = example;
   const f: Ctx = {
     form,
     set: (key, value) => commit({ ...form, a: { ...form.a, [key]: value } }),
@@ -391,18 +396,26 @@ export function DietHistory({ defaults, ageHint, provenance }: { defaults: Form;
           {isExample && (
             <div className="mt-4 rounded-xl bg-surface px-4 py-3">
               <p className="text-ink">
-                <strong className="font-semibold">Theo&apos;s answers are filled in as an example.</strong> The ones from his records are marked{" "}
+                <strong className="font-semibold">This is Theo&apos;s example, not your dog&apos;s history.</strong> His answers are filled in and nothing here is saved. The ones from his records are marked{" "}
                 <em>From his records</em>, and the questions his records can&apos;t answer say <em>Not in his records</em>. Using this for your own dog? Start with a blank form.
               </p>
-              <button onClick={() => commit(blank)} className="mt-2 rounded-full bg-brand px-4 py-2 text-sm font-medium text-on-brand">
+              <Link href="/diet-history" className="mt-2 inline-flex min-h-11 items-center rounded-full bg-brand px-4 text-sm font-medium text-on-brand">
                 Start a blank history for my dog
-              </button>
+              </Link>
             </div>
           )}
           <p role="status" className="mt-3 text-sm text-brand2">
             {p.answered} answered · {p.unknown} marked don&apos;t remember{p.notInRecords > 0 ? ` · ${p.notInRecords} not in his records` : ""} · {p.blank} still blank (of {p.total})
           </p>
         </Card>
+
+        {p.answered + p.unknown > 0 && (
+          <div className="flex flex-wrap items-center gap-2" aria-label="Export">
+            <button onClick={download} className="min-h-11 rounded-full bg-brand px-4 text-sm font-medium text-on-brand">Download CSV</button>
+            <button onClick={() => window.print()} className="min-h-11 rounded-full border border-line bg-surface px-4 text-sm hover:bg-brand-soft">Print or save as PDF</button>
+            <button onClick={copy} className="min-h-11 rounded-full border border-line bg-surface px-4 text-sm hover:bg-brand-soft">{copied ? "Copied" : "Copy as text"}</button>
+          </div>
+        )}
 
         <Step n={1} title="About the dog">
           <div className="grid gap-5 sm:grid-cols-2">
@@ -507,7 +520,7 @@ export function DietHistory({ defaults, ageHint, provenance }: { defaults: Form;
           <button
             onClick={() => {
               if (!confirmReset) { setConfirmReset(true); setTimeout(() => setConfirmReset(false), 4000); return; }
-              save("");
+              if (example) setExampleForm(defaults); else save("");
               setConfirmReset(false);
             }}
             className="rounded-full border border-line bg-surface px-4 py-2 text-sm text-red hover:bg-red-soft"

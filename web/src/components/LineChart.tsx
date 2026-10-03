@@ -6,6 +6,21 @@ export interface Annotation {
   label: string;
 }
 
+/** A row of bars on the shared time axis, for example one medication and its real breaks. */
+export interface Lane {
+  label: string;
+  color: string;
+  periods: { start: string; end: string | null; title: string }[];
+}
+
+/** A single event on the shared time axis. */
+export interface Marker {
+  date: string;
+  label: string;
+  kind: "flare" | "reaction";
+  approximate?: boolean;
+}
+
 interface Props {
   points: LabPoint[];
   unit?: string;
@@ -15,6 +30,12 @@ interface Props {
   height?: number;
   /** Line and point color. Defaults to the brand purple. */
   color?: string;
+  /** Medication periods drawn as bars under the line, on the same time axis. */
+  lanes?: Lane[];
+  /** Flares and reactions drawn as markers under the bars. */
+  markers?: Marker[];
+  /** Keeps the chart this wide (px) and scrolls inside its own container on narrower screens. */
+  minWidth?: number;
 }
 
 const W = 760;
@@ -29,10 +50,14 @@ function niceStep(range: number, ticks = 4): number {
 }
 
 /** A line chart with the reference range shaded. Out-of-range points are diamonds, in-range points are circles. */
-export function LineChart({ points, unit, label, annotations = [], scale = "linear", height = 300, color = "var(--brand)" }: Props) {
+export function LineChart({ points, unit, label, annotations = [], scale = "linear", height = 300, color = "var(--brand)", lanes = [], markers = [], minWidth }: Props) {
   if (!points.length) return <p className="text-muted">No results on file.</p>;
   const H = height;
-  const innerW = W - PAD.l - PAD.r;
+  const PL = lanes.length ? 104 : PAD.l; // room for the drug names beside the bars
+  const LANE = 20;
+  const lanesH = lanes.length * LANE + (markers.length ? 30 : 0);
+  const TH = H + (lanesH ? lanesH + 12 : 0);
+  const innerW = W - PL - PAD.r;
   const innerH = H - PAD.t - PAD.b;
 
   const withRef = points.find((p) => p.refLow != null && p.refHigh != null);
@@ -41,8 +66,11 @@ export function LineChart({ points, unit, label, annotations = [], scale = "line
 
   const times = points.map((p) => toTime(p.date));
   const annoTimes = annotations.map((a) => toTime(a.date));
-  const t0 = Math.min(...times, ...annoTimes) - 20 * DAY;
-  const t1 = Math.max(...times, ...annoTimes) + 20 * DAY;
+  const laneTimes = lanes.flatMap((l) => l.periods.flatMap((p) => [toTime(p.start), ...(p.end ? [toTime(p.end)] : [])]));
+  const markTimes = markers.map((m) => toTime(m.date));
+  const maxT = Math.max(...times, ...annoTimes, ...laneTimes, ...markTimes);
+  const t0 = Math.min(...times, ...annoTimes, ...laneTimes, ...markTimes) - 20 * DAY;
+  const t1 = maxT + 20 * DAY;
   const maxV = Math.max(...points.map((p) => p.value), refHigh ?? 0);
   const minV = Math.min(...points.map((p) => p.value), refLow ?? Infinity);
 
@@ -54,7 +82,7 @@ export function LineChart({ points, unit, label, annotations = [], scale = "line
   // Round coordinates: the server and the browser can differ in the last floating-point digits,
   // which would otherwise cause a hydration mismatch.
   const round = (n: number) => Math.round(n * 100) / 100;
-  const x = (t: number) => round(PAD.l + ((t - t0) / (t1 - t0)) * innerW);
+  const x = (t: number) => round(PL + ((t - t0) / (t1 - t0)) * innerW);
   const y = (v: number) => {
     if (log) {
       const f = (Math.log10(Math.max(v, yBot)) - Math.log10(yBot)) / (Math.log10(yTop) - Math.log10(yBot));
@@ -84,19 +112,20 @@ export function LineChart({ points, unit, label, annotations = [], scale = "line
 
   return (
     <figure className="w-full">
-      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={desc} className="h-auto w-full">
+      <div className={minWidth ? "overflow-x-auto" : undefined}>
+      <svg viewBox={`0 0 ${W} ${TH}`} role="img" aria-label={desc} className="h-auto w-full" style={minWidth ? { minWidth } : undefined}>
         {/* grid and axis */}
         {ticks.map((v) => (
           <g key={v}>
-            <line x1={PAD.l} x2={W - PAD.r} y1={y(v)} y2={y(v)} stroke="var(--chart-grid)" strokeWidth="1" />
-            <text x={PAD.l - 8} y={y(v) + 4} textAnchor="end" fontSize="11" fill="var(--muted)">
+            <line x1={PL} x2={W - PAD.r} y1={y(v)} y2={y(v)} stroke="var(--chart-grid)" strokeWidth="1" />
+            <text x={PL - 8} y={y(v) + 4} textAnchor="end" fontSize="11" fill="var(--muted)">
               {v >= 1000 ? `${+(v / 1000).toFixed(1)}k` : +v.toFixed(1)}
             </text>
           </g>
         ))}
         {years.map((yr) => (
           <g key={yr.label}>
-            <line x1={x(yr.t)} x2={x(yr.t)} y1={PAD.t} y2={H - PAD.b} stroke="var(--chart-grid)" strokeWidth="1" strokeDasharray="2 4" />
+            <line x1={x(yr.t)} x2={x(yr.t)} y1={PAD.t} y2={lanesH ? TH - 4 : H - PAD.b} stroke="var(--chart-grid)" strokeWidth="1" strokeDasharray="2 4" />
             <text x={x(yr.t) + 4} y={H - PAD.b + 16} fontSize="11" fill="var(--muted)">{yr.label}</text>
           </g>
         ))}
@@ -104,8 +133,8 @@ export function LineChart({ points, unit, label, annotations = [], scale = "line
         {/* reference range */}
         {refLow != null && refHigh != null && (
           <g>
-            <rect x={PAD.l} width={innerW} y={y(refHigh)} height={Math.max(2, y(refLow) - y(refHigh))} fill="var(--green-soft)" opacity="0.9" />
-            <text x={PAD.l + 6} y={y(refHigh) - 4} fontSize="11" fill="var(--green)">
+            <rect x={PL} width={innerW} y={y(refHigh)} height={Math.max(2, y(refLow) - y(refHigh))} fill="var(--green-soft)" opacity="0.9" />
+            <text x={PL + 6} y={y(refHigh) - 4} fontSize="11" fill="var(--green)">
               Reference range {refLow}–{refHigh}
             </text>
           </g>
@@ -144,13 +173,61 @@ export function LineChart({ points, unit, label, annotations = [], scale = "line
           );
         })}
 
+        {/* medication periods: one bar per period, so a stop and a restart show as a real gap */}
+        {lanes.map((ln, i) => {
+          const ly = H + 8 + i * LANE;
+          return (
+            <g key={ln.label}>
+              <text x={PL - 8} y={ly + 12} textAnchor="end" fontSize="11" fill="var(--ink-2)">{ln.label}</text>
+              <line x1={PL} x2={W - PAD.r} y1={ly + 7} y2={ly + 7} stroke="var(--chart-grid)" strokeWidth="1" />
+              {ln.periods.map((p) => {
+                const a = x(toTime(p.start));
+                const b = x(p.end ? toTime(p.end) : maxT);
+                return (
+                  <rect key={p.start} x={a} y={ly + 1} width={Math.max(4, round(b - a))} height="12" rx="3" fill={ln.color} stroke="var(--surface)" strokeWidth="1">
+                    <title>{p.title}</title>
+                  </rect>
+                );
+              })}
+            </g>
+          );
+        })}
+
+        {/* flares and reactions */}
+        {markers.length > 0 && (() => {
+          const my = H + 8 + lanes.length * LANE + 16;
+          return (
+            <g>
+              <text x={PL - 8} y={my + 4} textAnchor="end" fontSize="11" fill="var(--ink-2)">Flares</text>
+              <line x1={PL} x2={W - PAD.r} y1={my} y2={my} stroke="var(--chart-grid)" strokeWidth="1" />
+              {markers.map((m) => {
+                const mx = x(toTime(m.date));
+                const reaction = m.kind === "reaction";
+                return (
+                  <g key={m.date + m.label}>
+                    <title>{m.label}</title>
+                    {reaction ? (
+                      <circle cx={mx} cy={my} r="6" fill={m.approximate ? "var(--surface)" : "var(--red-fill)"} stroke="var(--red-fill)" strokeWidth="2" />
+                    ) : (
+                      <path d={`M${mx},${my - 7} L${mx + 7},${my} L${mx},${my + 7} L${mx - 7},${my} Z`} fill={m.approximate ? "var(--surface)" : "var(--amber-fill)"} stroke="var(--amber-fill)" strokeWidth="2" />
+                    )}
+                  </g>
+                );
+              })}
+            </g>
+          );
+        })()}
+
         {/* latest value label */}
         <text x={x(toTime(last.date)) - 8} y={y(last.value) - 12} textAnchor="end" fontSize="12" fontWeight="600" fill="var(--ink)">
           {last.value}{unit ? ` ${unit}` : ""}
         </text>
       </svg>
+      </div>
       <figcaption className="mt-1 text-xs text-muted">
         Diamonds mark values outside the reference range. A dashed ring marks a value whose records disagree.
+        {lanes.length > 0 && " Bars show when each medication was given, with its real breaks."}
+        {markers.length > 0 && " Under them, an amber diamond is a flare and a red circle is a suspected medication reaction. A hollow marker means the date is approximate."}
         {log && " Log scale: each gridline is ten times the one below, so large swings and small ones both show."}
       </figcaption>
     </figure>

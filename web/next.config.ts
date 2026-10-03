@@ -4,6 +4,10 @@ import path from "node:path";
 const nextConfig: NextConfig = {
   // The parent folders contain unrelated lockfiles; pin the project root to this app.
   turbopack: { root: path.join(__dirname) },
+  // Ask moved to the home page. Old links to /ask (and /ask?q=...) keep working.
+  async redirects() {
+    return [{ source: "/ask", destination: "/", permanent: false }];
+  },
 };
 
 export default nextConfig;

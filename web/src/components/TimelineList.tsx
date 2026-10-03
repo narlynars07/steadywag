@@ -51,10 +51,10 @@ export function TimelineList({ events }: { events: TimelineEvent[] }) {
 
       {[...byYear.entries()].map(([year, list]) => (
         <section key={year} className="mb-8">
-          <h2 className="sticky top-24 z-10 mb-3 bg-paper/90 py-1 font-serif text-2xl font-semibold backdrop-blur">{year}</h2>
+          <h2 className="sticky top-14 z-10 mb-3 bg-paper/90 py-1 font-serif text-2xl font-semibold backdrop-blur">{year}</h2>
           <ol className="space-y-3 border-l-2 border-line pl-5">
             {list.map((e) => (
-              <li key={e.id} className="relative rounded-xl border border-line bg-surface p-4">
+              <li key={e.id} id={e.id} className="relative scroll-mt-24 rounded-xl border border-line bg-surface p-4">
                 <span aria-hidden="true" className={`absolute -left-[30px] top-5 h-3.5 w-3.5 rounded-full border-2 border-paper ${DOT[e.tone]}`} />
                 <div className="flex flex-wrap items-center gap-2">
                   <Chip tone={e.tone}>{e.label}</Chip>

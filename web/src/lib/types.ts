@@ -30,7 +30,29 @@ export interface Medication {
   startDate?: string;
   endDate?: string;
   lastConfirmedOn?: string;
+  /** The specialist's own wording (how many, how often) from the latest written instructions. */
+  writtenInstruction?: string;
+  writtenInstructionOn?: string;
+  /** Timing or food guidance that appears in a vet document or clinic note. Times the family uses are in CareRoutine. */
+  timingNote?: string;
   notes?: string;
+  source?: SourceNote;
+}
+
+export interface RoutineItem {
+  medicationId: string;
+  note?: string;
+}
+
+/** The family's own daily routine (their sitter schedule). It supplies times only where his vet's instructions give none. */
+export interface CareRoutine {
+  _id: string;
+  title: string;
+  kind: "meal" | "medication" | "bedtime" | "note";
+  sortOrder: number;
+  timeLabel?: string;
+  detail?: string;
+  items?: RoutineItem[];
   source?: SourceNote;
 }
 
@@ -143,7 +165,7 @@ export interface Food {
 export interface DietHistoryEntry {
   _id: string;
   order: number;
-  section: "adult" | "treat" | "chew" | "puppy";
+  section: "adult" | "treat" | "chew" | "puppy" | "supplement";
   dietType?: string;
   brand?: string;
   formula?: string;
@@ -180,3 +202,30 @@ export interface Guidance {
   evidenceType?: string;
   reviewStatus?: string;
 }
+
+/** A record a history chapter or pattern rests on. Enough to name it and link to the page that shows it. */
+export interface HistorySource {
+  _id: string;
+  _type: string;
+  date?: string;
+  name?: string;
+  code?: string;
+  value?: number;
+}
+
+export interface HistorySummary { _id: string; title: string; body: string; sources?: HistorySource[] }
+
+export interface HistoryChapter {
+  _id: string;
+  order: number;
+  title: string;
+  dates?: string;
+  startDate: string;
+  endDate?: string;
+  summary: string;
+  keyNumbers?: string[];
+  notInRecords?: string[];
+  sources?: HistorySource[];
+}
+
+export interface HistoryPattern { _id: string; order: number; title: string; body: string; timingOnly?: boolean; sources?: HistorySource[] }

@@ -24,6 +24,7 @@ export const dietHistoryEntry = defineType({
           {title: 'Treat', value: 'treat'},
           {title: 'Chew', value: 'chew'},
           {title: 'Puppy diet', value: 'puppy'},
+          {title: 'Supplement', value: 'supplement'},
         ],
       },
       validation: (rule) => rule.required(),

@@ -20,6 +20,7 @@ export const sourceNote = defineType({
           {title: 'Radiology report', value: 'radiology-report'},
           {title: 'Nutrition consult', value: 'nutrition-consult'},
           {title: 'Owner notes', value: 'owner-notes'},
+          {title: 'Family routine (the family\'s own sitter schedule)', value: 'family-routine'},
           {title: 'Family recall (what the family remembers, not a medical record)', value: 'family-recall'},
           {title: 'Published guidance', value: 'published-guidance'},
         ],

@@ -1,6 +1,7 @@
 import { sanityFetch } from "./sanity";
 import type {
-  Dog, DietHistoryEntry, DietRule, Flare, Food, Gap, Guidance, Imaging, LabPoint, LabTestSummary, Medication, Question, Visit, WeightPoint,
+  HistoryChapter, HistoryPattern, HistorySummary,
+  CareRoutine, Dog, DietHistoryEntry, DietRule, Flare, Food, Gap, Guidance, Imaging, LabPoint, LabTestSummary, Medication, Question, Visit, WeightPoint,
 } from "./types";
 
 export const getDog = () =>
@@ -11,7 +12,7 @@ export const getDog = () =>
 
 export const getMedications = () =>
   sanityFetch<Medication[]>(`*[_type == "medication"] | order(startDate asc){
-    _id, name, genericName, dose, frequency, days, timeOfDay, purpose, status, startDate, endDate, lastConfirmedOn, notes,
+    _id, name, genericName, dose, frequency, days, timeOfDay, purpose, status, startDate, endDate, lastConfirmedOn, writtenInstruction, writtenInstructionOn, timingNote, notes,
     "source": source{documentType, documentDate, confidence, note}
   }`);
 
@@ -61,6 +62,13 @@ export const getDietRules = () =>
     "source": source{documentType, documentDate, confidence, note}
   }`);
 
+export const getCareRoutine = () =>
+  sanityFetch<CareRoutine[]>(`*[_type == "careRoutine"] | order(sortOrder asc){
+    _id, title, kind, sortOrder, timeLabel, detail,
+    "items": items[]{note, "medicationId": medication._ref},
+    "source": source{documentType, documentDate, confidence, note}
+  }`);
+
 export const getDietHistory = () =>
   sanityFetch<DietHistoryEntry[]>(`*[_type == "dietHistoryEntry"] | order(order asc){
     _id, order, section, dietType, brand, formula, startedOn, endedOn, origin, beforeDiagnosis,
@@ -96,3 +104,29 @@ export const getLabSeries = (code: string) =>
     }`,
     { code },
   );
+
+/** The 1 to 7 stool scale, split into one description per score from the guide's own text. */
+export async function getFecalScale(): Promise<{ score: number; text: string }[]> {
+  const g = await sanityFetch<{ summary?: string } | null>(`*[_id == "guidance-purina-fecal-score"][0]{summary}`);
+  const out: { score: number; text: string }[] = [];
+  for (const m of (g?.summary ?? "").matchAll(/Score (\d) (?:is |has )?([^.]+)\./g)) out.push({ score: Number(m[1]), text: `Score ${m[1]} ${m[0].slice(8).trim()}` });
+  return out;
+}
+
+const HISTORY_SOURCES = `"sources": sources[]->{ _id, _type, "date": coalesce(date, startDate), name, "code": test->code, value }`;
+
+export const getHistorySummary = () =>
+  sanityFetch<HistorySummary | null>(`*[_type == "historySummary"][0]{ _id, title, body, ${HISTORY_SOURCES} }`);
+
+export const getHistoryChapters = () =>
+  sanityFetch<HistoryChapter[]>(`*[_type == "historyChapter"] | order(order asc){ _id, order, title, dates, startDate, endDate, summary, keyNumbers, notInRecords, ${HISTORY_SOURCES} }`);
+
+export const getHistoryPatterns = () =>
+  sanityFetch<HistoryPattern[]>(`*[_type == "historyPattern"] | order(order asc){ _id, order, title, body, timingOnly, ${HISTORY_SOURCES} }`);
+
+/** What the floating chat needs: the not-given medication and the date of his last specialist visit. */
+export const getDockProfile = () =>
+  sanityFetch<{ alert: string | null; lastVisitDate: string | null }>(`{
+    "alert": *[_type == "medication" && status == "listed-not-given"][0].name,
+    "lastVisitDate": *[_type == "vetVisit" && visitType == "specialist-recheck"] | order(date desc)[0].date
+  }`);

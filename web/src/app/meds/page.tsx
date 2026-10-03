@@ -1,6 +1,7 @@
 import { Card, Chip, Confidence, PageHead } from "@/components/ui";
-import { getGaps, getMedications } from "@/lib/data";
-import { doseLine, fmtDate, TIME_OF_DAY } from "@/lib/format";
+import { getCareRoutine, getGaps, getMedications } from "@/lib/data";
+import { routineTimes, SOURCE_LABEL, vetTiming } from "@/lib/care";
+import { doseLine, fmtDate } from "@/lib/format";
 import type { Medication } from "@/lib/types";
 
 export const metadata = { title: "Medications · Steadywag" };
@@ -12,7 +13,7 @@ function period(m: Medication) {
 }
 
 export default async function MedsPage() {
-  const [meds, gaps] = await Promise.all([getMedications(), getGaps()]);
+  const [meds, gaps, routine] = await Promise.all([getMedications(), getGaps(), getCareRoutine()]);
   // The written list is what his specialist's reports show as current: the active drugs, plus ursodiol, which is on the list but not being given.
   const schedule = meds.filter((m) => m.status === "active" || m.status === "listed-not-given");
   const notGiven = meds.filter((m) => m.status === "listed-not-given");
@@ -35,33 +36,50 @@ export default async function MedsPage() {
       <div className="space-y-6">
         <Card title="Current written schedule" aside={listedOn ? `As of the ${fmtDate(listedOn)} specialist report` : undefined}>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[560px] text-left text-sm">
-              <caption className="sr-only">Medications on his current written list, with dose, how often, and when</caption>
+            <table className="w-full min-w-[620px] text-left text-sm">
+              <caption className="sr-only">Medications on his current written list, with his vet&apos;s instruction and when each is given</caption>
               <thead className="text-xs uppercase tracking-wide text-muted">
                 <tr>
                   <th className="py-2 pr-3 font-medium">Medication</th>
-                  <th className="py-2 pr-3 font-medium">Dose and how often</th>
+                  <th className="py-2 pr-3 font-medium">His vet&apos;s instruction</th>
                   <th className="py-2 pr-3 font-medium">When</th>
                   <th className="py-2 font-medium">What it is for</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
-                {schedule.map((m) => (
-                  <tr key={m._id} className="align-top">
-                    <td className="py-2.5 pr-3 font-medium">
-                      {m.name}
-                      {m.status === "listed-not-given" && <div className="mt-1"><Chip tone="red">Listed, not being given</Chip></div>}
-                    </td>
-                    <td className="py-2.5 pr-3">{doseLine(m)}</td>
-                    <td className="py-2.5 pr-3 text-muted">{m.timeOfDay ? TIME_OF_DAY[m.timeOfDay] : "Per his written list"}</td>
-                    <td className="py-2.5 text-muted">{m.purpose}</td>
-                  </tr>
-                ))}
+                {schedule.map((m) => {
+                  const vet = vetTiming(m);
+                  const times = routineTimes(m._id, routine);
+                  const conflict = m.source?.confidence === "conflicting" && m.status === "active";
+                  return (
+                    <tr key={m._id} className="align-top">
+                      <td className="py-2.5 pr-3 font-medium">
+                        {m.name}
+                        <div className="font-normal text-muted">{m.dose}</div>
+                        {m.status === "listed-not-given" && <div className="mt-1"><Chip tone="red">Listed, not being given</Chip></div>}
+                        {conflict && <div className="mt-1"><Chip tone="red" wrap>Records disagree, needs confirmation</Chip></div>}
+                      </td>
+                      <td className="py-2.5 pr-3">
+                        <div>{doseLine(m)}</div>
+                        {m.writtenInstruction && <div className="mt-1 text-xs text-muted">As written: {m.writtenInstruction}</div>}
+                      </td>
+                      <td className="py-2.5 pr-3 text-muted">
+                        {vet && <div><span className="font-medium text-ink2">{SOURCE_LABEL.vet}:</span> {vet}</div>}
+                        {times.length > 0 && (
+                          <div><span className="font-medium text-ink2">{SOURCE_LABEL.routine}:</span> {times.join(" and ")}</div>
+                        )}
+                        {!vet && times.length === 0 && <span>Not given. See below.</span>}
+                      </td>
+                      <td className="py-2.5 text-muted">{m.purpose}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
           <p className="mt-3 text-xs text-muted">
-            Some medications are also given as needed for nausea or poor appetite. Penicillamine is given on empty-stomach timing per his written instructions.
+            His vet&apos;s written instructions come first. Where they give no time, the time shown is his family&apos;s own routine, labeled as such.
+            Some medications are also given as needed for nausea or poor appetite.
           </p>
         </Card>
 
@@ -87,7 +105,7 @@ export default async function MedsPage() {
           <div className="space-y-5">
             {history.map(({ name, list }) => (
               <div key={name}>
-                <h3 className="font-serif text-lg font-semibold">{name}</h3>
+                <h3 className="text-lg font-semibold">{name}</h3>
                 <ol className="mt-1 space-y-2 border-l-2 border-line pl-4">
                   {list.map((m) => (
                     <li key={m._id} className="relative">
@@ -100,6 +118,7 @@ export default async function MedsPage() {
                       </div>
                       <div className="text-sm text-muted">{period(m)}{m.purpose ? ` · ${m.purpose}` : ""}</div>
                       {m.notes && <p className="mt-1 text-sm">{m.notes}</p>}
+                      {m.timingNote && m.status !== "stopped" && <p className="mt-1 text-sm text-muted">Timing in his records: {m.timingNote}</p>}
                       <Confidence value={m.source?.confidence === "conflicting" ? "conflicting" : undefined} note={m.source?.note} />
                     </li>
                   ))}

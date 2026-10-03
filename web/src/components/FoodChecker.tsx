@@ -60,7 +60,7 @@ export function FoodChecker({ foods }: { foods: Food[] }) {
               <p className="text-sm text-ink">
                 His plan doesn&apos;t cover this, so Steadywag can&apos;t say whether it&apos;s okay. What the plan does say: treats stay low in copper and sodium and under {DAILY_TREAT_CAP_KCAL} kcal a day, organ meats and many seafoods are avoided, and his specialist has recommended lowering the fat. Best next step: ask his team.
               </p>
-              <Link href={`/ask?q=${encodeURIComponent(`Can Theodore have ${query}? What does his plan say?`)}`} className="mt-3 inline-block rounded-full bg-brand px-4 py-1.5 text-sm font-medium text-on-brand">
+              <Link href={`/?q=${encodeURIComponent(`Can Theodore have ${query}? What does his plan say?`)}`} className="mt-3 inline-block rounded-full bg-brand px-4 py-1.5 text-sm font-medium text-on-brand">
                 Ask the records what the plan says
               </Link>
             </div>

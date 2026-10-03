@@ -128,7 +128,7 @@ export default async function VisitPrep() {
                   <p className="font-medium">{q.question}</p>
                   {q.why && <p className="mt-1 text-sm text-muted">{q.why}</p>}
                   <div className="mt-1.5 flex flex-wrap items-center gap-2">
-                    {q.condition && <Chip>{q.condition}</Chip>}
+                    {q.condition && <Chip wrap>{q.condition}</Chip>}
                     {q.guidance && (
                       <a href={q.guidance.sourceUrl} target="_blank" rel="noreferrer" className="text-sm text-brand underline">
                         Source: {q.guidance.title}

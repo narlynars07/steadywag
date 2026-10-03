@@ -352,9 +352,9 @@ MEDS = [
     ("cobalamin", "Vitamin B12 (cobalamin)", "cobalamin", "Weekly injection, then 250 mcg by mouth", "weekly, then q24", None, None, "Low B12", "stopped", "2023-01-01", None, [COPPER], "Injection series early 2023, then daily by mouth with folate (200 mcg) by June 2023. Not listed after 2023.", "single-source"),
     ("penicillamine-1", "Penicillamine", "D-penicillamine", "90 mg", "q24, then q12", None, "morning", "Binds copper so the body can clear it", "stopped", "2023-04-16", "2023-06-30", [COPPER], "Started once daily, moved to twice daily on 2023-04-30. Caused vomiting after morning doses. Stopped 6/30/2023.", "confirmed"),
     ("penicillamine-2", "Penicillamine", "D-penicillamine", "90 mg", "q12", None, "morning", "Binds copper so the body can clear it", "stopped", "2023-10-01", "2024-12-05", [COPPER], "Restart date is approximate: the December 2023 report says restarted about six weeks earlier. Stopped 12/5/2024 when a low neutrophil count was found.", "single-source"),
-    ("penicillamine-3", "Penicillamine", "D-penicillamine", "90 mg", "x3 weekly", ["mon", "wed", "fri"], "bedtime", "Binds copper so the body can clear it", "active", "2024-12-10", None, [COPPER], "Restarted at a lower maintenance schedule on 12/10/2024.", "confirmed"),
+    ("penicillamine-3", "Penicillamine", "D-penicillamine", "90 mg", "x3 weekly", ["mon", "wed", "fri"], None, "Binds copper so the body can clear it", "active", "2024-12-10", None, [COPPER], "Restarted at a lower maintenance schedule on 12/10/2024.", "confirmed"),
     ("ondansetron", "Zofran", "ondansetron", "4 mg", "q24", None, None, "Nausea from penicillamine", "stopped", "2023-05-01", "2023-06-02", [COPPER], "Replaced by Cerenia, which worked better.", "single-source"),
-    ("cerenia", "Cerenia", "maropitant", "16 mg", "x3 weekly, plus as needed", ["mon", "wed", "fri"], "morning", "Prevents nausea and vomiting", "active", "2023-04-30", None, [COPPER, PANC], "Given with penicillamine days and as needed for nausea or poor appetite. Daily during the February 2026 flares.", "confirmed"),
+    ("cerenia", "Cerenia", "maropitant", "16 mg", "x3 weekly, plus as needed", ["mon", "wed", "fri"], None, "Prevents nausea and vomiting", "active", "2023-04-30", None, [COPPER, PANC], "Given with penicillamine days and as needed for nausea or poor appetite. Daily during the February 2026 flares.", "confirmed"),
     ("prednisone-1", "Prednisone", "prednisone", "10 mg", "q24", None, "morning", "Calms liver inflammation", "stopped", "2023-12-08", "2024-02-08", [COPPER], "Reports say started December 2023. Exact day approximated to the 12/8 visit.", "single-source"),
     ("prednisone-2", "Prednisone", "prednisone", "20 mg", "q24", None, "morning", "Calms liver inflammation", "stopped", "2024-02-08", "2024-12-10", [COPPER], "Raised February 2024. Day approximated to the 2/8 visit.", "single-source"),
     ("prednisone-3", "Prednisone", "prednisone", "10 mg", "q24", None, "morning", "Calms liver inflammation", "active", "2024-12-10", None, [COPPER], "Lowered on 12/10/2024. A taper was planned once the low neutrophil count was explained.", "confirmed"),
@@ -364,7 +364,7 @@ MEDS = [
     ("cyclosporine-2", "Atopica (cyclosporine)", "cyclosporine", "25 mg", "q12", None, None, "Immune-modulating therapy for chronic hepatitis", "active", "2024-10-29", None, [COPPER], "Second period.", "confirmed"),
     ("clavamox", "Clavamox", "amoxicillin-clavulanate", "short course", "-", None, None, "Precaution while a low neutrophil count was checked", "stopped", "2024-12-05", "2024-12-10", [], "Stopped 12/10/2024.", "single-source"),
     ("proviable", "Proviable", "probiotic", "1 capsule", "q24", None, "evening", "Gut support", "stopped", "2024-10-01", None, [], "On the May 2025 list. Not on 2026 lists.", "single-source"),
-    ("fenofibrate", "Fenofibrate", "fenofibrate", "67 mg", "q24", None, "morning", "Lowers triglycerides", "active", "2026-03-11", None, [TRIG, PANC], "Prescribed 3/10/2026 after triglycerides above 1000.", "confirmed"),
+    ("fenofibrate", "Fenofibrate", "fenofibrate", "67 mg", "q24", None, None, "Lowers triglycerides", "active", "2026-03-11", None, [TRIG, PANC], "Prescribed 3/10/2026 after triglycerides above 1000.", "confirmed"),
     ("ursodiol", "Ursodiol", "ursodiol", "80 mg", "q24", None, None, "Bile flow support", "listed-not-given", "2026-04-22", None, [BILIARY], "Prescribed 4/22/2026 with instructions to stop at the first sign of pancreatitis. It is still on the June and August written medication lists, but it was never given: the caregiver at the visit was told verbally not to give it, after the bile duct problem settled by itself. The written record and actual care do not match, and no one who missed the visit would know.", "conflicting"),
 ]
 for (mid, name, generic, dose, freq, days, tod, purpose, status, start, end, conds, notes, conf) in MEDS:
@@ -543,6 +543,29 @@ for (order, section, dtype, brand, formula, started, ended, origin, before, dsrc
     add("dietHistoryEntry", f"dietHistoryEntry.{order:02d}", order=order, section=section, dietType=dtype, brand=brand, formula=formula,
         startedOn=started, endedOn=ended, origin=origin, beforeDiagnosis=before, source=dsrc)
 
+# Treats and human foods from the same consult (family recall, written into the consult), and the supplements he has had.
+TREATS = [
+    # order, name, formula, started, ended
+    (10, "Freeze-dried chicken treats (Simply Nourish Source High Protein Grain Free Freeze Dried 100% Real Chicken)", "3 treats every 2 to 3 days", "December 2022",
+     "Not recorded. The consult classed it as a raw animal product and advised avoiding it."),
+    (11, "Low-fat cheese stick (brand unknown)", None, "January 2020", "December 2022"),
+    (12, "Eggs", None, "December 2022", "March 2023, the end of the period the consult covers"),
+    (13, "Cottage cheese, 2% milk fat", None, "December 2022", "March 2023, the end of the period the consult covers"),
+    (14, "Various other human foods (not listed)", None, "January 2020", "March 2023"),
+]
+for (order, name, formula, started, ended) in TREATS:
+    add("dietHistoryEntry", f"dietHistoryEntry.{order:02d}", order=order, section="treat", dietType="Treat or human food", brand=name, formula=formula,
+        startedOn=started, endedOn=ended, origin="family-recall", beforeDiagnosis=True, source=src("family-recall", "2023-08-02", "single-source", RECALL_NOTE))
+SUPPS = [
+    (20, "Denamarin (liver support)", "November 2022", "Not on his list after early 2023", "single-source", "discharge-report", "2023-01-20", "From the history in the first specialist consult."),
+    (21, "Vitamin B12 (cobalamin)", "January 2023", "Injections in early 2023, then daily by mouth. Not listed after 2023", "single-source", "discharge-report", "2023-02-17", "From the February 2023 report and later notes."),
+    (22, "Zinc (part of the original home-cooked recipe)", "August 2023", "September 29, 2023. Stopped on the specialist's advice", "confirmed", "discharge-report", "2023-09-29", "Zinc was removed from his diet on the specialist's advice while he takes penicillamine."),
+    (23, "Multivitamin and fish oil (part of the home-cooked recipe)", "August 2023", "Current", "confirmed", "nutrition-consult", "2023-08-02", "From the nutrition service recipe."),
+]
+for (order, name, started, ended, conf, dtype, ddate, note) in SUPPS:
+    add("dietHistoryEntry", f"dietHistoryEntry.{order:02d}", order=order, section="supplement", dietType="Supplement", brand=name,
+        startedOn=started, endedOn=ended, origin="medical-record", beforeDiagnosis=(order == 20), source=src(dtype, ddate, conf, note))
+
 # Open questions for the vet (grounded in the records)
 QUESTIONS = [
     ("q-diet", "Has the low-fat diet reformulation been scheduled with the nutrition service?", "Four reports in a row (March, April, June, August 2026) recommend it, and the August report says it still has not been done. It may become the main long-term treatment for the triglycerides.", TRIG),
@@ -706,6 +729,12 @@ GUIDANCE = [
      ["Most dogs with pancreatitis had normal triglycerides", "Blood is drawn after fasting for at least 12 hours", "The study does not cover treatment", "It does not rule in or out a contribution from very high triglycerides in one dog"],
      "General population of dogs with pancreatitis and healthy controls. The very high triglyceride level documented in the chart (above 1000 mg/dL) is far above the mild increases seen in this study, and the specialist's report states that high triglycerides can contribute to recurrent pancreatitis episodes.",
      dict(sourceTitle="Serum triglyceride and cholesterol concentrations and lipoprotein profiles in dogs with naturally occurring pancreatitis and healthy control dogs", publisher="Journal of Veterinary Internal Medicine (Xenoulis and colleagues)", year=2020, sourceUrl="https://pmc.ncbi.nlm.nih.gov/articles/PMC7097643", evidenceType="peer-reviewed-study"), "checked"),
+    # Restored 2026-10-03: the daily check-in asks for a 1 to 7 stool score and shows these descriptions.
+    ("purina-fecal-score", "The 1 to 7 fecal score chart", "monitoring",
+     "A widely used chart for describing stool. Score 1 is very hard, dry pellets. Score 2 is ideal: firm but not hard, pliable and segmented. Score 3 is log-shaped and moist, leaving a little residue but holding its form. Score 4 is very moist and soggy and loses its form when picked up. Score 5 is very moist piles with a distinct shape. Score 6 has some texture but no defined shape, in piles or spots. Score 7 is watery with no texture, in flat puddles. The chart describes appearance and is not a diagnosis.",
+     ["Score 2 is ideal; scores 3 and 4 are softer", "Scores 5 to 7 are progressively looser", "It describes appearance only"],
+     "A general fecal scoring tool for dogs. A dog's own normal can sit a point or so away from the ideal, so his own baseline matters most.",
+     dict(sourceTitle="Purina Fecal Scoring Chart", publisher="Purina", year=None, sourceUrl="https://vmc.vet.osu.edu/sites/default/files/documents/purina-fecal-score-chart.pdf", evidenceType="clinical-reference"), "checked"),
     # Both entries below were written from the FULL open-access text (Europe PMC), 2026-10-03, not from summaries.
     ("pancreatitis-bile-duct-obstruction", "When pancreatitis blocks the bile duct: what 46 dogs showed", "monitoring",
      "A 2020 records review from one university hospital looked at 46 dogs whose pancreatitis was linked to a blocked or narrowed common bile duct, the tube that carries bile from the liver to the intestine. A dog was counted if its bilirubin reached 2.0 mg/dL or more and an ultrasound showed the common bile duct wider than 3 mm. Dogs with primary liver disease, gallbladder mucocele, bile duct tumors or obstructive gallstones were left out on purpose. Most dogs got better with medical care alone: 33 of the 42 dogs with a known outcome (79 percent) survived to leave the hospital, and 31 of those 33 had no procedure to drain the bile system. Of the 4 dogs that did have a drainage procedure, 2 died. Recovery was slow. The median time from first signs to the first fall in bilirubin was 15 days. Fever, vomiting and poor appetite often eased before bilirubin peaked, and the authors suspect those signs come mostly from the pancreatitis itself rather than the blockage, so a dog can seem better while blood tests still show it. How wide the duct was and how high the bilirubin went did not predict who survived.",
@@ -733,13 +762,6 @@ GUIDANCE = [
 # owner resource, not a dog-food regulation debate. Move it back into GUIDANCE to publish. The 'regulator-statement'
 # evidence type already exists in the Studio schema.
 HELD_BACK_GUIDANCE = [
-    # Cut from the Guide 2026-10-03: no page uses the 1 to 7 fecal score now that daily check-ins are gone.
-    # Move it back into GUIDANCE (and re-run build and load) to restore it.
-    ("purina-fecal-score", "The 1 to 7 fecal score chart", "monitoring",
-     "A widely used chart for describing stool. Score 1 is very hard, dry pellets. Score 2 is ideal: firm but not hard, pliable and segmented. Score 3 is log-shaped and moist, leaving a little residue but holding its form. Score 4 is very moist and soggy and loses its form when picked up. Score 5 is very moist piles with a distinct shape. Score 6 has some texture but no defined shape, in piles or spots. Score 7 is watery with no texture, in flat puddles. The chart describes appearance and is not a diagnosis.",
-     ["Score 2 is ideal; scores 3 and 4 are softer", "Scores 5 to 7 are progressively looser", "It describes appearance only"],
-     "A general fecal scoring tool for dogs. A dog's own normal can sit a point or so away from the ideal, so his own baseline matters most.",
-     dict(sourceTitle="Purina Fecal Scoring Chart", publisher="Purina", year=None, sourceUrl="https://vmc.vet.osu.edu/sites/default/files/documents/purina-fecal-score-chart.pdf", evidenceType="clinical-reference"), "checked"),
     # Written from AAFCO's own response (read in full). The JAVMA viewpoint it answers is paywalled and was NOT read,
     # so every claim about the viewpoint below is AAFCO's description of it, and the entry says so.
     ("aafco-copper-response", "Copper in commercial dog food: specialists asked for tighter limits, and the feed regulator declined", "nutrition",
@@ -779,7 +801,136 @@ amend("vetQuestion.q-penicillamine-duration", guidance=ref("guidance.tvp-copper-
 amend("vetQuestion.q-biopsy", guidance=ref("guidance.acvim-monitoring"),
       why="ALT has been normal since December 2024, but these records show no copper measurement since the original biopsy in 2023. The consensus statement describes normal ALT as a stand-in for success that can miss mild leftover copper, and says repeat measurement of liver copper is the best check of efficacy. It gives no fixed schedule.")
 
+# ---------------------------------------------------------------- written instructions and family routine
+# The vet's own wording from the August 25, 2026 discharge instructions, kept apart from the family's routine.
+# Strengths stay in `dose`; these say only how many and how often, exactly as written.
+WRITTEN_ON = "2026-08-25"
+
+
+def written(mid, text, timing=None):
+    fields = dict(writtenInstruction=text, writtenInstructionOn=WRITTEN_ON)
+    if timing:
+        fields["timingNote"] = timing
+    amend(f"medication.{mid}", **fields)
+
+
+written("fenofibrate", "Give 1 capsule by mouth every 24 hours until otherwise directed.")
+written("penicillamine-3", "Give 1 tablet by mouth 3 times weekly (Monday, Wednesday, Friday).",
+        "His August 2026 list and instruction give no timing. His 2024 instructions, when it was every 12 hours, said to give it 2 hours before or 2 hours after a meal.")
+written("cerenia", "Give 1 tablet by mouth every 24 hours as needed for nausea or poor appetite. The medication list in the same report says Monday, Wednesday and Friday.")
+written("prednisone-3", "Written as a 20 mg tablet: give 1/2 tablet by mouth every 24 hours until otherwise directed. The medication list in the same report says 10 mg every 24 hours, AM.",
+        "His medication list says AM.")
+written("cyclosporine-2", "Give 1 capsule by mouth every 12 hours until otherwise directed.",
+        "His clinic's notes say to keep the capsules in the freezer to help limit side effects. His written instruction gives no time of day or food guidance.")
+written("ursodiol", "Give 1 capsule by mouth every 24 hours until otherwise directed. It is on the written list but was never given.")
+# Cerenia: the list and the instruction in the same report disagree. Flag it, do not pick one.
+amend("medication.cerenia", source=src("discharge-report", "2026-08-25", "conflicting",
+      "The August 25, 2026 medication list says 16 mg on Monday, Wednesday and Friday. The written instruction in the same report says every 24 hours as needed for nausea or poor appetite."))
+
+add("recordGap", "recordGap.cerenia-schedule", title="Cerenia: his medication list and his written instruction disagree", kind="conflict",
+    why="His August 25, 2026 medication list says 16 mg on Monday, Wednesday and Friday. The written instruction in the same report says give 1 tablet every 24 hours as needed for nausea or poor appetite. Earlier reports describe it as three times a week plus as needed, and daily during the February 2026 flares. Which schedule is current is not on file.",
+    whereToLook=strs(["Ask the specialist's team which schedule is current, and to correct whichever of the two is out of date", "The after-visit instructions from August 25, 2026"]),
+    status="open", condition=ref(PANC))
+amend("recordGap.ursodiol-instruction", ownerNote="Does not remember which visit it was. The family's sitter routine (September 2026) does not include ursodiol either.")
+
+# The family's own routine: times only, labeled as such. Where his records give timing, the records win.
+FR = src("family-routine", "2026-09-01", "single-source",
+         "The family's own sitter schedule (September 2026). It supplies times only where his vet's written instructions give none.")
+
+
+def routine(slug, order, kind, title, time, detail=None, items=None, note=None):
+    entries = [{"_type": "routineMedication", "_key": key("ri"), "medication": ref(m), "note": n} for (m, n) in (items or [])]
+    add("careRoutine", f"careRoutine.{slug}", title=title, kind=kind, sortOrder=order, timeLabel=time or None, detail=detail,
+        items=entries or None, source=note or FR)
+
+
+routine("breakfast", 10, "meal", "Breakfast", "about 8:00 AM", "Home-cooked food from the bags. Move the bag from the freezer to the fridge ahead of each meal.")
+routine("morning-meds", 20, "medication", "Morning medications", "about 8:30 AM, after breakfast",
+        "The times are the family's. His vet's written instruction for each drug is shown with it.",
+        [("medication.fenofibrate", None), ("medication.prednisone-3", "His medication list says AM"), ("medication.cyclosporine-2", "Capsules kept in the freezer"),
+         ("medication.cerenia", "Monday, Wednesday, Friday per his list. His written instruction says as needed. Records disagree.")])
+routine("lunch", 30, "meal", "Lunch", "about 2:00 PM", "Home-cooked food from the bags. Move the bag from the freezer to the fridge ahead of time.")
+routine("dinner", 40, "meal", "Dinner", "about 8:00 PM", "A smaller portion than the other meals. Home-cooked food from the bags.")
+routine("evening-meds", 50, "medication", "Evening medication", "about 8:30 PM", "Every 12 hours after the morning dose.", [("medication.cyclosporine-2", None)])
+routine("bedtime-meds", 60, "medication", "Bedtime medication", "at bedtime, on Monday, Wednesday and Friday",
+        "Given separately from dinner. His 2024 instruction was 2 hours before or 2 hours after a meal. His August 2026 instruction gives no timing.",
+        [("medication.penicillamine-3", None)])
+routine("dental-spray", 70, "bedtime", "Dental spray", "before bed", "3 sprays of dental spray. The family reports his vet approved it verbally. It is not in his records.",
+        note=src("family-routine", "2026-09-01", "single-source", "Reported by the family as verbally approved by his vet. Nothing in his records says so."))
+routine("ursodiol-not-given", 80, "note", "Ursodiol is not part of the routine", "", "The family does not give ursodiol. It is still on his written medication list.")
+
+add("vetQuestion", "vetQuestion.q-dental-spray", question="The family reports his vet approved a dental spray before bed. Can the team note that approval in his chart?",
+    why="A verbal approval is not in his records, the same way the ursodiol instruction was never written down. Anyone reading his chart would not know about it.", status="open", condition=ref(COPPER))
+add("vetQuestion", "vetQuestion.q-cerenia", question="Which Cerenia schedule is current: Monday, Wednesday and Friday, or every 24 hours as needed?",
+    why="His August 25, 2026 medication list says Monday, Wednesday and Friday. The written instruction in the same report says every 24 hours as needed for nausea or poor appetite.", status="open", condition=ref(PANC))
+
 # ---------------------------------------------------------------- final pass
+# ---- History page: summary, five chapters, four patterns (text approved 2026-10-03; every claim checked against the records)
+HS = lambda note: src("discharge-report", "2026-08-25", "confirmed", note)
+
+
+def hrefs(*ids):
+    return refs(ids)
+
+
+add("historySummary", "historySummary.theo", title="Theo in 60 seconds",
+    body=("Theo's liver problem was found by accident, on bloodwork before a dental cleaning in November 2022. A biopsy in March 2023 showed his liver was storing too much copper. "
+          "The first copper-binding drug, penicillamine, made him vomit, so treatment was built in stages: a home-cooked diet from a nutrition service, then prednisone, then Atopica (cyclosporine). "
+          "His ALT first came back into the normal range in December 2024. Pancreatitis flares were then recorded between June 2025 and early 2026. "
+          "In March 2026 his blood fats were above 1,000, and fenofibrate was started. At his August 25, 2026 visit he was doing very well. "
+          "One step keeps being recommended and hasn't happened: a lower-fat diet."),
+    sources=hrefs("vetVisit.2022-11-10", "vetVisit.2023-03-10", "medication.penicillamine-1", "medication.prednisone-1", "medication.cyclosporine-2", "labResult.alt-2024-12-05",
+                  "flareEpisode.2025-06-30", "flareEpisode.2026-01-28", "labResult.trig-2026-03-06", "medication.fenofibrate", "vetVisit.2026-08-25"),
+    source=HS("Written from his visit reports, labs and medication lists. Each claim points at the records listed with it."))
+
+CH = [
+    (1, "A surprise on routine bloodwork", "Nov 2022 to Mar 2023", "2022-11-10", "2023-03-31",
+     "Bloodwork before a planned dental cleaning found a high ALT. It kept rising with no outward signs. A March 10, 2023 liver biopsy found mild chronic lymphocytic hepatitis, with copper building up in liver cells.",
+     ["ALT 366, then 863, then over 1,000", "Liver copper 959 µg/g"], [],
+     ["vetVisit.2022-11-10", "vetVisit.2023-01-20", "vetVisit.2023-02-17", "vetVisit.2023-03-10", "labResult.alt-2022-11-10", "labResult.alt-2022-12-07", "labResult.alt-2023-01-13"]),
+    (2, "Finding a treatment he could tolerate", "Apr to Dec 2023", "2023-04-01", "2023-12-07",
+     "Penicillamine made him vomit after morning doses, and it was stopped on June 30 while the nutrition service built a diet. In September 2023, zinc was taken out of the recipe and penicillamine was restarted. ALT still kept climbing.",
+     ["Lost about 1 kg", "ALT peak 2,431 (Dec 8)"], [],
+     ["medication.penicillamine-1", "medication.penicillamine-2", "vetVisit.2023-06-02", "vetVisit.2023-06-30", "vetVisit.2023-09-29", "vetVisit.2023-12-08", "labResult.alt-2023-12-08"]),
+    (3, "Calming the liver", "Dec 2023 to Dec 2024", "2023-12-08", "2024-12-31",
+     "Prednisone started at 10 mg, then was doubled in February 2024. Side effects were thinning tail hair, longer urination and weight gain. Atopica (cyclosporine) was started on October 11, stopped on October 16 after a suspected reaction, and restarted on October 29. His team and the family agreed the reaction may have been coincidental timing.",
+     ["ALT 115 on Dec 5, 2024 (first normal)", "Weight up to 10.5 kg in June 2024"], [],
+     ["medication.prednisone-1", "medication.prednisone-2", "medication.cyclosporine", "medication.cyclosporine-2", "vetVisit.2024-06-13", "vetVisit.2024-10-16", "vetVisit.2024-12-05", "flareEpisode.2024-10-16", "labResult.alt-2024-12-05"]),
+    (4, "Stable liver, new problem", "2025 to early 2026", "2025-01-01", "2026-02-28",
+     "His liver values stayed normal. Four presumed pancreatitis flares are on record: June 2025, January 28 (the emergency visit), February 21 and February 28, 2026.",
+     ["ALT 80, 90, 88 (all normal)", "4 flares on record"],
+     ["No report for the November 11, 2025 specialist visit is in the records", "No paperwork from the January 28, 2026 emergency visit is in the records"],
+     ["labResult.alt-2025-01-07", "labResult.alt-2025-05-14", "labResult.alt-2026-03-03", "flareEpisode.2025-06-30", "flareEpisode.2026-01-28", "flareEpisode.2026-02-21", "flareEpisode.2026-02-28",
+      "vetVisit.2025-11-11", "recordGap.nov-2025-visit", "recordGap.jan-2026-er"]),
+    (5, "Getting it under control", "Mar 2026 to now", "2026-03-01", None,
+     "In March his blood looked milky, and a fasted test found triglycerides above 1,000 and pancreatic lipase of 1,039. Fenofibrate started on March 11, and triglycerides were 144 on March 31. Imaging showed bile duct widening that his team linked to pancreatitis. By June the suspected blockage had resolved. In August he was doing very well. The lower-fat diet had still not been done.",
+     ["ALT 59 (Aug 25)", "Triglycerides 144 (Mar 31)"],
+     ["The August 25, 2026 triglyceride result was never recorded"],
+     ["vetVisit.2026-03-03", "vetVisit.2026-03-10", "vetVisit.2026-04-22", "vetVisit.2026-06-03", "vetVisit.2026-08-25", "labResult.trig-2026-03-06", "labResult.cpl-2026-03-06", "labResult.trig-2026-03-31",
+      "labResult.alt-2026-08-25", "medication.fenofibrate", "imagingStudy.2026-03-31", "imagingStudy.2026-04-22", "imagingStudy.2026-06-03", "recordGap.aug-2026-triglycerides"]),
+]
+for n, title, dates, start, end, summary, keys, missing, ids in CH:
+    add("historyChapter", f"historyChapter.{n}", order=n, title=title, dates=dates, startDate=start, endDate=end, summary=summary, keyNumbers=strs(keys),
+        notInRecords=strs(missing) or None, sources=hrefs(*ids), source=HS("Written from his visit reports, labs and medication lists. Each claim points at the records listed with it."))
+
+PT = [
+    (1, "Two of his flares began with a tired evening and refusing food",
+     "This was true of the February 21 and February 28, 2026 flares. The others began differently: in June 2025 vomiting and soft stool came first, and in January 2026 it was 24 hours without appetite.", False,
+     ["flareEpisode.2026-02-21", "flareEpisode.2026-02-28", "flareEpisode.2025-06-30", "flareEpisode.2026-01-28"]),
+    (2, "Two medications were hard on his stomach",
+     "Penicillamine caused vomiting in 2023. Atopica (cyclosporine) was stopped after a suspected reaction in October 2024, then restarted, and there has been no recurrence on the record. His team and the family thought the reaction may have been coincidence.", False,
+     ["medication.penicillamine-1", "vetVisit.2023-06-02", "medication.cyclosporine", "medication.cyclosporine-2", "flareEpisode.2024-10-16"]),
+    (3, "ALT fell after prednisone, and first reached the normal range after Atopica (cyclosporine) was added",
+     "ALT fell from 2,431 to 424 in the 33 days after prednisone started. It first read normal (115) on December 5, 2024, after Atopica (cyclosporine) was restarted on October 29.", True,
+     ["labResult.alt-2023-12-08", "labResult.alt-2024-01-10", "medication.prednisone-1", "medication.cyclosporine-2", "labResult.alt-2024-12-05"]),
+    (4, "A lower-fat diet has been recommended four times",
+     "The recommendations are dated March 10, April 22, June 3 and August 25, 2026. The August report notes it had still not been done.", False,
+     ["vetVisit.2026-03-10", "vetVisit.2026-04-22", "vetVisit.2026-06-03", "vetVisit.2026-08-25"]),
+]
+for n, title, body, timing, ids in PT:
+    add("historyPattern", f"historyPattern.{n}", order=n, title=title, body=body, timingOnly=timing, sources=hrefs(*ids),
+        source=HS("Written from his visit reports, labs and medication lists. Each claim points at the records listed with it."))
+
 # One name for the drug on every page: "Atopica (cyclosporine)". Applies to display text only, never to ids,
 # references or the genericName field. Runs last so it covers everything added above.
 _ATOPICA = "Atopica (cyclosporine)"

@@ -47,13 +47,6 @@ export const CONFIDENCE_LABEL: Record<Confidence, string> = {
   conflicting: "Records disagree, needs confirmation",
 };
 
-export const TIME_OF_DAY: Record<string, string> = {
-  morning: "Morning, after breakfast",
-  evening: "Evening",
-  bedtime: "Bedtime",
-  "as-needed": "As needed",
-};
-
 export function ageYears(birthYear: number, now = new Date()): number {
   return now.getFullYear() - birthYear;
 }
