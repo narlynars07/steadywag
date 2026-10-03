@@ -75,7 +75,9 @@ function Check() {
   );
 }
 
-export function AskApp({ profile, initialQuestion, autorun, compact = false, onNavigate }: { profile: AskProfile; initialQuestion?: string; autorun?: boolean; compact?: boolean; onNavigate?: () => void }) {
+export interface AskContext { title: string; suggestions: string[] }
+
+export function AskApp({ profile, initialQuestion, autorun, compact = false, onNavigate, context }: { profile: AskProfile; initialQuestion?: string; autorun?: boolean; compact?: boolean; onNavigate?: () => void; context?: AskContext }) {
   const { messages, setMessages, sendMessage, status, error, stop, clearError } = useChat<ChatMessage>({ chat: getChat() });
   const router = useRouter();
   const day = useLocalDay();
@@ -266,10 +268,13 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false, onN
   };
 
   // ---- Home ----
+  // The question box comes first, so it is always clear where to ask. Tasks are shortcuts underneath it.
+  const chips = context?.suggestions ?? SUGGESTED.slice(0, 3);
+  const rowCls = compact ? "min-h-16 flex-row items-center gap-3" : "lg:min-h-16 lg:flex-row lg:items-center lg:gap-3";
   const renderHome = () => (
     <div className="flex flex-col gap-4">
       {!compact && <section className="flex items-center gap-3.5 rounded-[18px] border border-line bg-surface p-3">
-        <Link href="/history" aria-label="Theo, his history" className="block h-[72px] w-[72px] shrink-0 overflow-hidden rounded-full border-[3px] border-surface shadow-[0_0_0_2px_var(--brand)]">
+        <Link href="/history" aria-label="Theo, his history" className="block h-14 w-14 shrink-0 overflow-hidden rounded-full border-[3px] border-surface shadow-[0_0_0_2px_var(--brand)] lg:h-[72px] lg:w-[72px]">
           <Image src="/theo.jpg" alt="Theo" width={144} height={144} priority className="h-full w-full object-cover object-[50%_30%]" />
         </Link>
         <div className="min-w-0">
@@ -282,15 +287,28 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false, onN
         </div>
       </section>}
 
-      {compact ? (
-        <h2 className="text-lg font-extrabold tracking-tight text-ink">What do you need help with?</h2>
-      ) : (
-        <div className="flex flex-col gap-2 lg:hidden">
-          <p className="text-xs font-bold uppercase tracking-[0.08em] text-brand2">Theo&apos;s care companion</p>
-          <h1 className="text-[28px] font-extrabold leading-[1.15] tracking-tight text-ink">What do you need help with?</h1>
-          <p className="text-[15px] leading-relaxed text-ink2">I know Theo&apos;s plan and his 180 pages of records. I&apos;ll tell you when the paperwork would lead you wrong.</p>
+      <div className={`flex flex-col gap-3 ${compact ? "" : "lg:hidden"}`}>
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.08em] text-brand2">{compact ? "Theo's care companion" : "Theo's care companion · chat"}</p>
+          {compact ? <h2 className="text-lg font-extrabold tracking-tight text-ink">{context?.title ?? "Ask about Theo"}</h2> : <h1 className="text-2xl font-extrabold leading-tight tracking-tight text-ink">Ask anything about Theo</h1>}
         </div>
-      )}
+        <form onSubmit={(e) => { e.preventDefault(); send(freeText); }} className="flex flex-col gap-2">
+          <label htmlFor="free-ask" className="sr-only">Ask anything about Theo</label>
+          <div className="flex gap-2">
+            <input
+              id="free-ask" ref={freeRef} value={freeText} onChange={(e) => setFreeText(e.target.value)} maxLength={1500} autoComplete="off"
+              placeholder={compact ? "Ask a question…" : "Type a question about Theo…"}
+              className="h-14 min-w-0 flex-1 rounded-2xl border-2 border-brand/40 bg-surface px-4 text-base text-ink outline-none focus:border-brand"
+            />
+            <button type="submit" disabled={!freeText.trim()} className="h-14 rounded-2xl bg-brand px-5 text-base font-bold text-on-brand disabled:opacity-40">Ask</button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {chips.map((q) => (
+              <button key={q} type="button" onClick={() => send(q)} className="min-h-11 rounded-full border border-line bg-surface px-3.5 text-left text-sm font-semibold text-brand2 hover:bg-brand-soft">{q}</button>
+            ))}
+          </div>
+        </form>
+      </div>
 
       {profile.alert && (
         <div role="note" className="flex items-start gap-2.5 rounded-2xl border border-amber-fill/50 bg-amber-soft px-3.5 py-3 text-sm leading-snug text-amber">
@@ -298,6 +316,8 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false, onN
           <p><strong className="font-semibold">{profile.alert} is on his written list, but don&apos;t give it.</strong> A verbal instruction never made it onto the paperwork.</p>
         </div>
       )}
+
+      <p className="-mb-1 text-xs font-bold uppercase tracking-[0.08em] text-muted">Or start with a task</p>
 
       {/* The plan for the day is on the Today page: faster and easier to scan than an agent answer. */}
       <button type="button" onClick={goToday} className="flex min-h-16 w-full items-center gap-3 rounded-2xl bg-brand p-4 text-left text-on-brand">
@@ -308,12 +328,12 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false, onN
         </span>
       </button>
 
-      <div className={`grid grid-cols-2 gap-2.5 ${compact ? "" : "lg:grid-cols-1"}`}>
+      <div className={`grid gap-2.5 ${compact ? "grid-cols-1" : "grid-cols-2 lg:grid-cols-1"}`}>
         {TASK_CARDS.map((c) => (
           <button
             key={c.task} type="button"
             onClick={() => (c.task === "sitter" || c.task === "visit" ? run(c.task) : setPending(c.task as "changed" | "eat"))}
-            className={`flex min-h-[104px] flex-col gap-2 rounded-2xl border border-line bg-surface p-3.5 text-left text-brand2 ${compact ? "" : "lg:min-h-16 lg:flex-row lg:items-center lg:gap-3"}`}
+            className={`flex min-h-[104px] flex-col gap-2 rounded-2xl border border-line bg-surface p-3.5 text-left text-brand2 ${rowCls}`}
           >
             {c.icon}
             <span className="flex flex-col gap-2 lg:gap-0.5">
@@ -323,20 +343,6 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false, onN
           </button>
         ))}
       </div>
-
-      <form onSubmit={(e) => { e.preventDefault(); send(freeText); }} className={`flex flex-col gap-2 ${compact ? "" : "lg:hidden"}`}>
-        <label htmlFor="free-ask" className="text-[13px] font-semibold text-ink2">Or ask anything about Theo</label>
-        <div className="flex gap-2">
-          <input
-            id="free-ask" ref={freeRef} value={freeText} onChange={(e) => setFreeText(e.target.value)} maxLength={1500} autoComplete="off"
-            placeholder="e.g., Is his ALT trend moving the right way?"
-            className="h-12 min-w-0 flex-1 rounded-xl border border-line bg-surface px-3.5 text-[15px] text-ink outline-none focus:border-brand"
-          />
-          <button type="submit" aria-label="Ask" disabled={!freeText.trim()} className="flex h-12 w-12 items-center justify-center rounded-xl bg-ink text-surface disabled:opacity-40">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
-          </button>
-        </div>
-      </form>
 
       <div className="rounded-xl bg-amber-soft px-4 py-3 text-sm text-amber">
         Not veterinary advice. If your dog isn&apos;t eating, is vomiting repeatedly, has blood or black stool, yellow gums, or seems very unwell, contact your vet or an emergency vet now.

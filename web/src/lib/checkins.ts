@@ -59,6 +59,36 @@ export function saveCheckIn(entry: CheckIn) {
 
 export function eraseCheckIns() { write(""); }
 
+/** Removes one day's entry. */
+export function deleteCheckIn(date: string) {
+  const rest = parse(snapshot()).filter((e) => e.date !== date);
+  write(rest.length ? JSON.stringify(rest) : "");
+}
+
+const APPETITE = ["Ate all", "Some", "None"] as const, ENERGY = ["Normal", "Lower than usual"] as const, YESNO = ["Yes", "No"] as const, MEDS = ["All given", "Missed one"] as const;
+const pick = <T extends string>(v: unknown, allowed: readonly T[]): T | null => (typeof v === "string" && (allowed as readonly string[]).includes(v) ? (v as T) : null);
+
+/** Reads a backup file back in. Only well-formed entries are kept, and a restored day replaces the same day already saved. Returns how many were restored. */
+export function importCheckIns(text: string): number {
+  let list: unknown;
+  try { list = JSON.parse(text); } catch { return 0; }
+  if (!Array.isArray(list)) return 0;
+  const clean: CheckIn[] = [];
+  for (const e of list) {
+    if (!e || typeof e !== "object" || typeof (e as CheckIn).date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test((e as CheckIn).date)) continue;
+    const o = e as Record<string, unknown>;
+    const stool = typeof o.stool === "number" && Number.isInteger(o.stool) && o.stool >= 1 && o.stool <= 7 ? o.stool : null;
+    clean.push({ date: o.date as string, appetite: pick(o.appetite, APPETITE), energy: pick(o.energy, ENERGY), stool, vomit: pick(o.vomit, YESNO), meds: pick(o.meds, MEDS), note: typeof o.note === "string" ? o.note.slice(0, 200) : "" });
+  }
+  if (!clean.length) return 0;
+  const keep = parse(snapshot()).filter((e) => !clean.some((c) => c.date === e.date));
+  write(JSON.stringify([...clean, ...keep].sort((a, b) => b.date.localeCompare(a.date))));
+  return clean.length;
+}
+
+/** A backup file the family can keep and restore from. */
+export function toJson(all: CheckIn[]): string { return JSON.stringify(all, null, 2); }
+
 /** Check-ins on or after a date, newest first, capped to what a request may carry. */
 export function checkInsSince(all: CheckIn[], sinceIso: string | null, limit = 14): CheckIn[] {
   return all.filter((e) => !sinceIso || e.date > sinceIso).slice(0, limit);
