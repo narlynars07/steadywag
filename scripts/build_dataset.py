@@ -932,7 +932,7 @@ for n, title, body, timing, ids in PT:
         source=HS("Written from his visit reports, labs and medication lists. Each claim points at the records listed with it."))
 
 # ---- From Theo's family: observations, never advice. HELD BACK until the family approves the exact wording (set True to load).
-FAMILY_NOTES_APPROVED = False
+FAMILY_NOTES_APPROVED = True
 if FAMILY_NOTES_APPROVED:
     FO = src("family-observation", "2026-10-03", "single-source",
              "What the family has noticed while caring for him. Not checked against his records, and not advice from a veterinarian.")
