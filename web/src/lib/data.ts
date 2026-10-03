@@ -1,6 +1,6 @@
 import { sanityFetch } from "./sanity";
 import type {
-  HistoryChapter, HistoryPattern, HistorySummary,
+  FamilyNote, HistoryChapter, HistoryPattern, HistorySummary,
   CareRoutine, Dog, DietHistoryEntry, DietRule, Flare, Food, Gap, Guidance, Imaging, LabPoint, LabTestSummary, Medication, Question, Visit, WeightPoint,
 } from "./types";
 
@@ -130,3 +130,6 @@ export const getDockProfile = () =>
     "alert": *[_type == "medication" && status == "listed-not-given"][0].name,
     "lastVisitDate": *[_type == "vetVisit" && visitType == "specialist-recheck"] | order(date desc)[0].date
   }`);
+
+export const getFamilyNotes = () =>
+  sanityFetch<FamilyNote[]>(`*[_type == "familyNote"] | order(order asc){ _id, order, title, body, directedBy, askYourVet }`);

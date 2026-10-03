@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { Card, Chip } from "@/components/ui";
 import { LineChart, type Annotation, type Lane, type Marker } from "@/components/LineChart";
 import { Sparkline } from "@/components/Sparkline";
-import { getDog, getFlares, getGaps, getHistoryChapters, getHistoryPatterns, getHistorySummary, getLabSeries, getMedications, getQuestions, getVisits, getWeights } from "@/lib/data";
+import { getDog, getFlares, getGaps, getFamilyNotes, getHistoryChapters, getHistoryPatterns, getHistorySummary, getLabSeries, getMedications, getQuestions, getVisits, getWeights } from "@/lib/data";
 import { SOURCE_LABEL } from "@/lib/care";
 import type { HistorySource } from "@/lib/types";
 import { ageYears, fmtDate, fmtMonthYear } from "@/lib/format";
@@ -85,9 +85,9 @@ const DRUG_LANES: { match: RegExp; label: string; color: string }[] = [
 ];
 
 export default async function History() {
-  const [dog, meds, alt, alkp, weights, visits, gaps, questions, flares, summary, chapters, patterns] = await Promise.all([
+  const [dog, meds, alt, alkp, weights, visits, gaps, questions, flares, summary, chapters, patterns, familyNotes] = await Promise.all([
     getDog(), getMedications(), getLabSeries("ALT"), getLabSeries("ALKP"), getWeights(), getVisits(), getGaps(), getQuestions(), getFlares(),
-    getHistorySummary(), getHistoryChapters(), getHistoryPatterns(),
+    getHistorySummary(), getHistoryChapters(), getHistoryPatterns(), getFamilyNotes(),
   ]);
 
   const lastALT = alt.at(-1)!;
@@ -183,7 +183,7 @@ export default async function History() {
 
       <nav aria-label="On this page" className="sticky top-16 z-20 -mx-4 overflow-x-auto bg-paper/95 px-4 py-2 backdrop-blur sm:mx-0 sm:px-0 md:top-[4.5rem]">
         <ul className="flex gap-2">
-          {[["The whole story", "#chart"], ["Chapters", "#chapters"], ["What it shows", "#patterns"], ["What's missing", "#open"]].map(([l, h]) => (
+          {[["The whole story", "#chart"], ["Chapters", "#chapters"], ["What it shows", "#patterns"], ...(familyNotes.length ? [["From his family", "#family"]] : []), ["What's missing", "#open"]].map(([l, h]) => (
             <li key={h} className="shrink-0"><a href={h} className="flex min-h-11 items-center rounded-full border border-line bg-surface px-4 text-sm font-semibold text-brand2 hover:bg-brand-soft">{l}</a></li>
           ))}
         </ul>
@@ -240,6 +240,27 @@ export default async function History() {
           </article>
         ))}
       </section>
+
+      {familyNotes.length > 0 && (
+        <section id="family" aria-labelledby="family-heading" className="scroll-mt-32 space-y-3">
+          <div>
+            <h2 id="family-heading" className="text-xl font-extrabold tracking-tight text-ink">From Theo&apos;s family</h2>
+            <p className="mt-1 text-sm text-muted">What one family has learned while caring for him. These are observations, not medical advice and not instructions from a veterinarian.</p>
+          </div>
+          {familyNotes.map((n) => (
+            <article key={n._id} className="rounded-2xl border border-line bg-surface px-4 py-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <Chip tone="brand">{SOURCE_LABEL.observation}</Chip>
+                {n.directedBy === "family" && <span className="text-xs text-muted">Not something his vet told us to do</span>}
+              </div>
+              <h3 className="mt-1.5 text-[15px] font-bold leading-snug text-ink">{n.title}</h3>
+              <p className="mt-1 text-sm leading-relaxed text-ink2">{n.body}</p>
+              {n.askYourVet && <p className="mt-2 text-sm text-muted"><span className="font-semibold text-ink2">Worth asking your own vet:</span> {n.askYourVet}</p>}
+            </article>
+          ))}
+          <p className="rounded-xl bg-amber-soft px-3.5 py-2.5 text-sm text-amber">Every dog and every illness is different. If your dog is vomiting, won&apos;t eat, or seems dehydrated, call your vet.</p>
+        </section>
+      )}
 
       <nav aria-label="More of his records" className="flex flex-wrap gap-2">
         {[["Timeline", "/timeline"], ["Labs", "/labs"], ["Medications", "/meds"], ["Visit prep", "/visit-prep"]].map(([l, h]) => (

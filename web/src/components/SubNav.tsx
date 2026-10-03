@@ -20,7 +20,7 @@ const YOUR_DOG = [
 export function SubNav() {
   const pathname = usePathname();
 
-  if (pathname.startsWith("/food")) {
+  if (pathname.startsWith("/food") || pathname.startsWith("/sitter")) {
     return (
       <div className="no-print mb-4">
         <Link href="/today" className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-brand2 underline-offset-4 hover:underline">

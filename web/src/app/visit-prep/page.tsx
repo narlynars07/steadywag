@@ -1,3 +1,4 @@
+import { CheckInsSince } from "@/components/CheckInsSince";
 import { CopySummary } from "@/components/CopySummary";
 import { Card, Chip, PageHead } from "@/components/ui";
 import { getDog, getFlares, getGaps, getLabSeries, getMedications, getQuestions, getVisits, getWeights } from "@/lib/data";
@@ -84,6 +85,7 @@ export default async function VisitPrep() {
       <PageHead title="Visit prep" lead="One page to bring to the next appointment: what changed, what to ask, and what the family still can't find. Printable.">
         <CopySummary text={text} />
       </PageHead>
+      <div className="mb-6"><CheckInsSince sinceIso={last.date} /></div>
 
       <div className="space-y-6">
         <Card title="Where things stand">

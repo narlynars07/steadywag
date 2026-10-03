@@ -229,3 +229,6 @@ export interface HistoryChapter {
 }
 
 export interface HistoryPattern { _id: string; order: number; title: string; body: string; timingOnly?: boolean; sources?: HistorySource[] }
+
+/** Something one family has noticed while caring for him. An observation, never advice. */
+export interface FamilyNote { _id: string; order: number; title: string; body: string; directedBy?: "family" | "vet"; askYourVet?: string }

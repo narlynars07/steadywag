@@ -931,6 +931,38 @@ for n, title, body, timing, ids in PT:
     add("historyPattern", f"historyPattern.{n}", order=n, title=title, body=body, timingOnly=timing, sources=hrefs(*ids),
         source=HS("Written from his visit reports, labs and medication lists. Each claim points at the records listed with it."))
 
+# ---- From Theo's family: observations, never advice. HELD BACK until the family approves the exact wording (set True to load).
+FAMILY_NOTES_APPROVED = False
+if FAMILY_NOTES_APPROVED:
+    FO = src("family-observation", "2026-10-03", "single-source",
+             "What the family has noticed while caring for him. Not checked against his records, and not advice from a veterinarian.")
+    NOTES = [
+        (1, "The first signs we notice", "family",
+         "When a flare starts, the first thing we notice is that he doesn't want to eat. He also won't jump off the bed or go down the stairs on his own, so we carry him and set him down.",
+         None),
+        (2, "One vomit plus no appetite: we don't wait", "family",
+         "If he throws up even once and doesn't want to eat, he gets dehydrated fast. On one emergency visit he had vomited in the middle of the night, we got to the vet around 7 AM, and he was already severely dehydrated even though he had eaten and drunk normally the day before. So we act as soon as we see the first signs.",
+         "When should we come in? Ask his specialist for a plan for flare days."),
+        (3, "What seems to comfort him", "family",
+         "A warm pillow or blanket around his belly seems to help him feel better during an episode. We don't know why, and it may not apply to every dog.",
+         None),
+        (4, "Keeping fluids going", "family",
+         "We keep a syringe on hand and offer small amounts of water, even if he doesn't want it. This is our own approach, not something his vet told us to do.",
+         "Is offering water by syringe okay, and how much? Ask your own vet."),
+        (5, "Getting back to normal", "family",
+         "Once he has gone a while without vomiting and has had some fluids and warmth, he usually shows interest in food within two to three hours. We start with small amounts and build back up to his normal meals over time.",
+         "When is it safe to restart his regular meals and medications after a flare? Ask his specialist."),
+        (6, "Days he won't eat but isn't vomiting", "family",
+         "On an off day with no vomiting, when his stool looks a little mucusy and he won't eat, an appetite stimulant his vet prescribed has helped bring his appetite back within a couple of hours.",
+         "His written list shows this medication as stopped. Is it still prescribed, and when should it be used?"),
+    ]
+    for n, title, by, body, ask in NOTES:
+        add("familyNote", f"familyNote.{n}", order=n, title=title, body=body, directedBy=by, askYourVet=ask, source=FO)
+    add("vetQuestion", "vetQuestion.q-canned-chicken", question="Is plain canned chicken okay on flare days, or should it always be home-cooked?",
+        why="His written diet plan says to use only plain home-cooked chicken and never canned, precooked, deli or marinated chicken. The family sometimes uses canned chicken first after a flare.", status="open", condition=ref(PANC))
+    add("vetQuestion", "vetQuestion.q-appetite-stimulant", question="His written medication list shows his appetite stimulant as stopped, but the family still uses it on no-appetite days. Is it still prescribed, and when should it be used?",
+        why="A medication used at home is not on his written list, the same way the ursodiol instruction was never written down.", status="open", condition=ref(PANC))
+
 # One name for the drug on every page: "Atopica (cyclosporine)". Applies to display text only, never to ids,
 # references or the genericName field. Runs last so it covers everything added above.
 _ATOPICA = "Atopica (cyclosporine)"

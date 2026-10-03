@@ -4,6 +4,7 @@ import "./globals.css";
 import { Nav } from "@/components/Nav";
 import { SubNav } from "@/components/SubNav";
 import { ChatDock } from "@/components/ChatDock";
+import { KeyboardAware } from "@/components/KeyboardAware";
 import { getDockProfile } from "@/lib/data";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
@@ -34,6 +35,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <footer className="no-print border-t border-line px-4 pb-28 pt-6 text-center text-sm text-muted md:pb-6">
           Steadywag tracks and prepares. It never diagnoses, doses, or replaces his vet. Records are de-identified.
         </footer>
+        <KeyboardAware />
         <ChatDock profile={{ name: "Theo", line: "", status: "", alert: dock.alert ?? undefined, lastVisitDate: dock.lastVisitDate }} />
       </body>
     </html>

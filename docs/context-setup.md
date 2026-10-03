@@ -81,16 +81,16 @@ Click **New MCP** (endpoint).
 - **Title:** `Steadywag chart`
 - **Name:** `steadywag-chart` (this cannot be changed later)
 - **Source:** dataset `<project-id>.production`
-- **groqFilter** (all 19 document types, including `dietHistoryEntry`, `careRoutine` and the three `history*` types):
+- **groqFilter** (all 20 document types, including `dietHistoryEntry`, `careRoutine`, `familyNote` and the three `history*` types):
 
 ```groq
-_type in ["dog","condition","medication","labTest","labResult","weightEntry","vetVisit","imagingStudy","flareEpisode","dietRule","foodItem","guidance","vetQuestion","recordGap","dietHistoryEntry","careRoutine","historySummary","historyChapter","historyPattern"]
+_type in ["dog","condition","medication","labTest","labResult","weightEntry","vetVisit","imagingStudy","flareEpisode","dietRule","foodItem","guidance","vetQuestion","recordGap","dietHistoryEntry","careRoutine","historySummary","historyChapter","historyPattern","familyNote"]
 ```
 
 - **Instructions:**
 
 ```
-You are reading one dog's de-identified health chart. Answer only from what these documents say. Quote dates. Every fact has a source.confidence of confirmed, single-source, or conflicting: say so when it is not confirmed. recordGap documents list what is NOT on file, so mention a gap rather than guessing. dietHistoryEntry documents hold what he ate before and around diagnosis: check their origin, and say when an entry is family recall and not a medical record. careRoutine documents are the family's own daily routine: use them for times only where a medication's writtenInstruction or timingNote gives none, and label them family routine. historySummary, historyChapter and historyPattern are written from his records and point at the visits, labs and medications they rest on: cite them, and say "Timing only. The records don't show cause." where timingOnly is true. When you read medication documents, always include lastConfirmedOn and writtenInstruction. Never diagnose, give or change a dose, or advise starting or stopping any medication or diet.
+You are reading one dog's de-identified health chart. Answer only from what these documents say. Quote dates. Every fact has a source.confidence of confirmed, single-source, or conflicting: say so when it is not confirmed. recordGap documents list what is NOT on file, so mention a gap rather than guessing. dietHistoryEntry documents hold what he ate before and around diagnosis: check their origin, and say when an entry is family recall and not a medical record. careRoutine documents are the family's own daily routine: use them for times only where a medication's writtenInstruction or timingNote gives none, and label them family routine. familyNote documents are what his family has noticed: call them Family observations, never present them as advice or instructions. historySummary, historyChapter and historyPattern are written from his records and point at the visits, labs and medications they rest on: cite them, and say "Timing only. The records don't show cause." where timingOnly is true. When you read medication documents, always include lastConfirmedOn and writtenInstruction. Never diagnose, give or change a dose, or advise starting or stopping any medication or diet.
 ```
 
 An endpoint with a dataset source needs a deployed Studio (`npm run deploy` in `studio/`).

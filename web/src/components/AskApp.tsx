@@ -1,20 +1,17 @@
 "use client";
 
-import { Chat, useChat } from "@ai-sdk/react";
-import { DefaultChatTransport, type UIMessage } from "ai";
+import { useChat } from "@ai-sdk/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Rich } from "./Rich";
-import { SourcesPanel, type AgentMode } from "./SourcesPanel";
+import { SourcesPanel } from "./SourcesPanel";
+import { getChat, session, setSession, type ChatMessage } from "@/lib/conversation";
 import { checkInsSince, parse, snapshot } from "@/lib/checkins";
 import { isDone, isLookup, sourceChips, traceSteps } from "@/lib/trace";
 import { taskQuestion, type Task } from "@/lib/tasks";
 import { useLocalDay } from "@/lib/useLocalDay";
-
-// The server tags each answer with how it read the chart: through Sanity Context, or by the direct-query fallback.
-type ChatMessage = UIMessage<{ agentMode?: AgentMode }>;
 
 export interface AskProfile {
   name: string;
@@ -24,36 +21,12 @@ export interface AskProfile {
   lastVisitDate: string | null;
 }
 
-/**
- * One conversation for the whole visit, shared by the Ask page and the floating window, so it follows you between pages.
- * It lives only in this browser tab's memory: closing the tab ends it, and nothing is saved anywhere.
- * Earlier answers are sent back as text only (no lookup results), which keeps follow-up questions fast and cheap.
- */
-let sharedChat: Chat<ChatMessage> | null = null;
-function getChat(): Chat<ChatMessage> {
-  sharedChat ??= new Chat<ChatMessage>({
-    transport: new DefaultChatTransport<ChatMessage>({
-      api: "/api/chat",
-      prepareSendMessagesRequest: ({ messages, body }) => ({
-        body: {
-          ...body,
-          messages: messages.map((m) => (m.role === "assistant" ? { ...m, parts: m.parts.filter((p) => p.type === "text") } : m)),
-        },
-      }),
-    }),
-  });
-  return sharedChat;
-}
-const session: { task: Task | null; checkins: unknown[] | undefined; usedCheckIns: boolean } = { task: null, checkins: undefined, usedCheckIns: false };
-/** What the current conversation started with (its task and any check-ins it sends). Shared like the chat itself. */
-function setSession(next: Partial<typeof session>) { Object.assign(session, next); }
-
 const ICON = { width: 22, height: 22, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true };
 const TASK_CARDS: { task: Task; title: string; sub: string; icon: ReactNode }[] = [
   { task: "changed", title: "Something changed", sub: "Check it against his history", icon: <svg {...ICON}><path d="M3 12h4l3-7 4 14 3-7h4" /></svg> },
   { task: "eat", title: "Can he eat this?", sub: "Check a food against his plan", icon: <svg {...ICON}><path d="M12 7c-3-3-8-1-7 4 1 4 4 9 7 9s6-5 7-9c1-5-4-7-7-4z" /><path d="M12 7c0-2 1-3 3-4" /></svg> },
-  { task: "sitter", title: "I'm watching Theo", sub: "A brief for a sitter", icon: <svg {...ICON}><circle cx="9" cy="8" r="3" /><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" /><path d="M16 11l2 2 4-4" /></svg> },
-  { task: "visit", title: "Prep my vet visit", sub: "Questions and what's missing", icon: <svg {...ICON}><path d="M9 4h6v3H9z" /><path d="M7 5H5v15h14V5h-2" /><path d="M9 12h6M9 16h4" /></svg> },
+  { task: "sitter", title: "I'm watching Theo", sub: "A brief to share with a sitter", icon: <svg {...ICON}><circle cx="9" cy="8" r="3" /><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" /><path d="M16 11l2 2 4-4" /></svg> },
+  { task: "visit", title: "Prep my vet visit", sub: "Questions, gaps and your check-ins", icon: <svg {...ICON}><path d="M9 4h6v3H9z" /><path d="M7 5H5v15h14V5h-2" /><path d="M9 12h6M9 16h4" /></svg> },
 ];
 
 const URGENT =
@@ -119,8 +92,15 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false, onN
     void sendMessage({ text: v }, { body: bodyFor("free") });
   };
 
+  useEffect(() => {
+    const onHome = () => setPending(null);
+    window.addEventListener("steadywag:home", onHome);
+    return () => window.removeEventListener("steadywag:home", onHome);
+  }, []);
+
   const back = () => { if (busy) stop(); clearError(); setMessages([]); setPending(null); setSession({ task: null, checkins: undefined, usedCheckIns: false }); };
-  const goToday = () => { router.push("/today"); onNavigate?.(); };
+  const goTo = (href: string) => { router.push(href); onNavigate?.(); };
+  const goToday = () => goTo("/today");
 
   // "Ask about this chapter" links arrive with ?q=...&go=1 and ask straight away. A plain ?q= only fills the box.
   const started = useRef(false);
@@ -197,7 +177,7 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false, onN
   const composer = (hideOnDesktop: boolean) => (
     <form
       onSubmit={(e) => { e.preventDefault(); send(freeText); }}
-      className={`sticky z-10 flex gap-2 rounded-2xl border border-line bg-surface p-2 shadow-[0_4px_16px_rgba(23,19,42,0.12)] ${compact ? "bottom-0" : "bottom-[4.75rem] md:bottom-4"} ${hideOnDesktop && !compact ? "lg:hidden" : ""}`}
+      className={`composer-bar sticky z-10 flex gap-2 rounded-2xl border border-line bg-surface p-2 shadow-[0_4px_16px_rgba(23,19,42,0.12)] ${compact ? "bottom-0" : "bottom-[4.75rem] md:bottom-4"} ${hideOnDesktop && !compact ? "lg:hidden" : ""}`}
     >
       <label htmlFor="follow-up" className="sr-only">Ask a follow-up question</label>
       <input id="follow-up" value={freeText} onChange={(e) => setFreeText(e.target.value)} maxLength={1500} autoComplete="off" placeholder="Ask a follow-up…"
@@ -332,7 +312,7 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false, onN
         {TASK_CARDS.map((c) => (
           <button
             key={c.task} type="button"
-            onClick={() => (c.task === "sitter" || c.task === "visit" ? run(c.task) : setPending(c.task as "changed" | "eat"))}
+            onClick={() => (c.task === "sitter" ? goTo("/sitter") : c.task === "visit" ? goTo("/visit-prep") : setPending(c.task as "changed" | "eat"))}
             className={`flex min-h-[104px] flex-col gap-2 rounded-2xl border border-line bg-surface p-3.5 text-left text-brand2 ${rowCls}`}
           >
             {c.icon}

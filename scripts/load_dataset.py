@@ -20,7 +20,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 API_VERSION = "2026-10-01"
 # Referencing documents come before the documents they reference.
-DELETE_ORDER = ["historyPattern", "historyChapter", "historySummary", "careRoutine", "recordGap", "vetQuestion", "dietHistoryEntry", "guidance", "labResult", "weightEntry", "imagingStudy", "flareEpisode", "medication",
+DELETE_ORDER = ["familyNote", "historyPattern", "historyChapter", "historySummary", "careRoutine", "recordGap", "vetQuestion", "dietHistoryEntry", "guidance", "labResult", "weightEntry", "imagingStudy", "flareEpisode", "medication",
                 "dietRule", "foodItem", "vetVisit", "dog", "labTest", "condition"]
 
 

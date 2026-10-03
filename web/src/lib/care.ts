@@ -5,6 +5,7 @@ export const SOURCE_LABEL = {
   vet: "Vet records",
   routine: "Family routine",
   recall: "Family recall",
+  observation: "Family observations",
   checkin: "Your check-ins",
 } as const;
 export type SourceKind = keyof typeof SOURCE_LABEL;

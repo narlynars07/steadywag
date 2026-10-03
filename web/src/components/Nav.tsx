@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { resetConversation } from "@/lib/conversation";
 import { useLocalDay } from "@/lib/useLocalDay";
 
 type IconProps = { className?: string };
@@ -30,7 +31,7 @@ const DogIcon = svg(
 /** The five destinations. Existing pages keep their URLs and sit under the destination that links to them. */
 const TABS: { href: string; label: string; Icon: (p: IconProps) => ReactNode; owns: (path: string) => boolean }[] = [
   { href: "/", label: "Ask", Icon: AskIcon, owns: (p) => p === "/" },
-  { href: "/today", label: "Today", Icon: TodayIcon, owns: (p) => p.startsWith("/today") || p.startsWith("/food") },
+  { href: "/today", label: "Today", Icon: TodayIcon, owns: (p) => p.startsWith("/today") || p.startsWith("/food") || p.startsWith("/sitter") },
   { href: "/check-in", label: "Check-in", Icon: CheckInIcon, owns: (p) => p.startsWith("/check-in") },
   {
     href: "/history", label: "History", Icon: HistoryIcon,
@@ -53,7 +54,7 @@ export function Nav() {
     <>
       <header className="no-print sticky top-0 z-40 border-b border-line bg-surface/95 backdrop-blur">
         <div className="mx-auto flex h-14 w-full max-w-5xl items-center gap-3 px-4 sm:px-6">
-          <Link href="/" className="flex shrink-0 items-center gap-2 text-lg font-bold tracking-tight text-ink">
+          <Link href="/" onClick={() => resetConversation()} className="flex shrink-0 items-center gap-2 text-lg font-bold tracking-tight text-ink">
             <Image src="/logo.png" alt="" width={32} height={32} priority className="rounded-[9px]" />
             Steadywag
           </Link>
@@ -66,6 +67,7 @@ export function Nav() {
                   key={t.href}
                   href={t.href}
                   aria-current={active ? "page" : undefined}
+                  onClick={() => { if (t.href === "/") resetConversation(); }}
                   className={`flex min-h-11 items-center rounded-full px-4 text-sm font-medium transition-colors ${
                     active ? "bg-brand text-on-brand" : "text-muted hover:bg-brand-soft hover:text-ink"
                   }`}
@@ -87,7 +89,7 @@ export function Nav() {
 
       <nav
         aria-label="Main"
-        className="no-print fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-line bg-surface px-1 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:hidden"
+        className="mobile-tabbar no-print fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-line bg-surface px-1 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:hidden"
       >
         {TABS.map((t) => {
           const active = t.owns(pathname);
@@ -96,6 +98,7 @@ export function Nav() {
               key={t.href}
               href={t.href}
               aria-current={active ? "page" : undefined}
+              onClick={() => { if (t.href === "/") resetConversation(); }}
               className={`flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl text-[11px] ${
                 active ? "bg-brand-soft font-bold text-brand2" : "font-medium text-muted"
               }`}

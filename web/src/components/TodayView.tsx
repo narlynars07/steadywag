@@ -183,6 +183,11 @@ export function TodayView({ data }: { data: TodayData }) {
         <p className="mt-1">Contact his vet or an emergency vet.</p>
       </section>
 
+      <Link href="/sitter" className="flex min-h-14 items-center justify-between gap-3 rounded-2xl border border-line bg-surface px-3.5 py-3 text-brand2">
+        <span><span className="block text-base font-bold text-ink">Someone else covering for you?</span><span className="block text-sm text-muted">A sitter brief you can print or share</span></span>
+        <span aria-hidden="true">→</span>
+      </Link>
+
       <section className="rounded-2xl border border-line bg-surface px-3.5 py-3">
         <h2 className="text-base font-bold text-ink">Activity</h2>
         <p className="mt-1 text-sm text-ink2">His records don&apos;t include an activity plan.</p>

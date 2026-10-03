@@ -28,6 +28,7 @@ const TYPE_STEP: Record<string, string> = {
   historySummary: "Reading his story",
   historyChapter: "Reading his story",
   historyPattern: "Reading his story",
+  familyNote: "Reading his family's observations",
 };
 
 /** Where each kind of record is shown on the site. */
@@ -50,6 +51,7 @@ const TYPE_CHIP: Record<string, { label: string; href: string }> = {
   recordGap: { label: "Visit prep", href: "/visit-prep" },
   vetQuestion: { label: "Visit prep", href: "/visit-prep" },
   guidance: { label: "The guide", href: "/guide" },
+  familyNote: { label: "From his family", href: "/history#family" },
 };
 
 /** The text of a lookup's query or input, whatever shape the tool used. */
