@@ -1,0 +1,6 @@
+# Never upload local secrets. The deployment gets its settings from Vercel's environment variables.
+.env
+.env.*
+.env.local
+.next
+node_modules

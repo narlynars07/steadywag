@@ -1,0 +1,143 @@
+@import "tailwindcss";
+
+/*
+ * Steadywag palette, taken from the PawChart prototype: violet-tinted neutrals, a purple brand,
+ * and a purple to blue to green accent. Each status color has a bright "fill" (bars, dots) and a darker
+ * text version, because the bright ones do not reach AA contrast as small text.
+ */
+:root {
+  --paper: #f6f4f9;        /* page background */
+  --surface: #fbfafd;      /* cards */
+  --cream-2: #ece7f3;
+  --ink: #17132a;
+  --ink-2: #2a2542;
+  --muted: #6d6883;
+  --line: #e4dff0;
+  --line-2: #d2ccdf;
+
+  --brand: #8a4de8;
+  --on-brand: #ffffff;     /* text on a brand-colored button or pill */
+  --brand-2: #6d35c2;      /* brand as text on light or tinted backgrounds */
+  --brand-soft: #ece0ff;
+
+  --blue: #4d8cc8;
+  --blue-soft: #dbe8f5;
+
+  --green: #0b7a4a;        /* text */
+  --green-fill: #1cb673;
+  --green-soft: #d6f3e3;
+
+  --amber: #8a5a00;        /* text */
+  --amber-fill: #d49a2a;
+  --amber-soft: #f6ebcf;
+
+  --red: #b3392f;          /* text */
+  --red-fill: #d4524a;
+  --red-soft: #fbe3e0;
+
+  --chart-grid: #ece7f3;
+  --gradient: linear-gradient(90deg, #8a4de8 0%, #4d8cc8 50%, #1cb673 100%);
+  --gradient-soft: linear-gradient(135deg, #ece0ff 0%, #d9e8f4 50%, #d6f3e3 100%);
+  --shadow: 0 1px 0 rgba(40, 30, 70, 0.04), 0 6px 20px rgba(40, 30, 70, 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #120f1d;
+    --surface: #1a1628;
+    --cream-2: #241f36;
+    --ink: #f0ecfa;
+    --ink-2: #d9d3ea;
+    --muted: #a59fbd;
+    --line: #2d2745;
+    --line-2: #3a3258;
+
+    --brand: #a67cf2;
+    --on-brand: #1b1233;
+    --brand-2: #c7adff;
+    --brand-soft: #2b2050;
+
+    --blue: #7db0e6;
+    --blue-soft: #1d2b40;
+
+    --green: #62d6a2;
+    --green-fill: #2fc88a;
+    --green-soft: #17342a;
+
+    --amber: #ecbc5c;
+    --amber-fill: #e0a63a;
+    --amber-soft: #3a2d12;
+
+    --red: #ff8f84;
+    --red-fill: #e9645a;
+    --red-soft: #3f1d1a;
+
+    --chart-grid: #2a2440;
+    --gradient-soft: linear-gradient(135deg, #2b2050 0%, #1d2b40 50%, #17342a 100%);
+    --shadow: 0 1px 0 rgba(0, 0, 0, 0.3), 0 6px 20px rgba(0, 0, 0, 0.25);
+  }
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-cream: var(--cream-2);
+  --color-ink: var(--ink);
+  --color-ink2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line2: var(--line-2);
+  --color-brand: var(--brand);
+  --color-on-brand: var(--on-brand);
+  --color-brand2: var(--brand-2);
+  --color-brand-soft: var(--brand-soft);
+  --color-blue: var(--blue);
+  --color-blue-soft: var(--blue-soft);
+  --color-green: var(--green);
+  --color-green-fill: var(--green-fill);
+  --color-green-soft: var(--green-soft);
+  --color-amber: var(--amber);
+  --color-amber-fill: var(--amber-fill);
+  --color-amber-soft: var(--amber-soft);
+  --color-red: var(--red);
+  --color-red-fill: var(--red-fill);
+  --color-red-soft: var(--red-soft);
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-inter); /* the site uses Inter throughout; "font-serif" classes now resolve to it */
+  --font-mono: var(--font-jetbrains);
+  --radius-card: 22px;
+}
+
+html {
+  background: var(--paper);
+  color-scheme: light dark;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  line-height: 1.55;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Print: the visit prep page is meant to be handed to a vet. */
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff; color: #000; }
+  .print-card { break-inside: avoid; border: 1px solid #bbb !important; box-shadow: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}

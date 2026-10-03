@@ -1,0 +1,38 @@
+# Private source records and anything derived from them before de-identification review
+source-records/
+data/private/
+scratchpad/
+*.pdf
+*.docx
+*.heic
+*.heif
+# Text extracted from source PDFs, and intermediate data files
+*.pdf.txt
+history.txt
+rec/
+*.ndjson
+.batch.json
+
+# Private drafts that are not part of the product
+docs/family-notes-draft.md
+
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Local tool profiles and caches
+.home-*/
+.config/
+.claude/
+.DS_Store
+*.log
+
+# Build output
+node_modules/
+.next/
+.vercel/
+dist/
+.sanity/
