@@ -78,7 +78,7 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false, onN
     let checkins: unknown[] | undefined;
     if (t === "visit") {
       const list = checkInsSince(parse(snapshot()), profile.lastVisitDate);
-      checkins = list.length ? list.map(({ date: d, appetite, energy, stool, vomit, meds, activity, note }) => ({ date: d, appetite, energy, stool, vomit, meds, activity, note })) : undefined;
+      checkins = list.length ? list.map(({ date: d, appetite, drinking, energy, stool, vomit, meds, activity, bruising, yellow, yellowWhere, note }) => ({ date: d, appetite, drinking, energy, stool, vomit, meds, activity, bruising, yellow, yellowWhere, note })) : undefined;
     }
     setSession({ task: t, checkins, usedCheckIns: !!checkins });
     void sendMessage({ text: taskQuestion(t, text) }, { body: { ...bodyFor(t), ...(checkins ? { checkins } : {}) } });

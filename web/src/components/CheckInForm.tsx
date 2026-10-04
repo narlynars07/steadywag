@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRef, useState, useSyncExternalStore } from "react";
-import { ACTIVITIES, EMPTY_CHECKIN, deleteCheckIn, describe, eraseCheckIns, importCheckIns, parse, saveCheckIn, snapshot, subscribe, toCsv, toJson, type CheckIn } from "@/lib/checkins";
+import { ACTIVITIES, YELLOW_PLACES, EMPTY_CHECKIN, deleteCheckIn, describe, eraseCheckIns, importCheckIns, parse, saveCheckIn, snapshot, subscribe, toCsv, toJson, type CheckIn } from "@/lib/checkins";
 import { fmtDate } from "@/lib/format";
 import { useLocalDay } from "@/lib/useLocalDay";
 
@@ -44,7 +44,7 @@ export function CheckInForm({ scale }: { scale: { score: number; text: string }[
 
   const openDay = (d: string | null) => { setPicked(d === today ? null : d); setDraft(null); setFlash(""); };
   const isToday = date === today;
-  const urgent = entry.appetite === "None" || entry.vomit === "Yes";
+  const urgent = entry.appetite === "None" || entry.vomit === "Yes" || entry.yellow === "Seen";
 
   const strip = Array.from({ length: 14 }, (_, i) => {
     if (!today) return null;
@@ -70,6 +70,7 @@ export function CheckInForm({ scale }: { scale: { score: number; text: string }[
       )}
 
       <Choice label="Appetite" options={["Ate all", "Some", "None"]} value={entry.appetite} onChange={(v) => set({ appetite: v })} />
+      <Choice label="Drinking water, compared with usual" options={["Less than usual", "Normal", "More than usual"]} value={entry.drinking} onChange={(v) => set({ drinking: v })} />
       <Choice label="Energy" options={["Normal", "Lower than usual"]} value={entry.energy} onChange={(v) => set({ energy: v })} />
 
       <fieldset>
@@ -114,7 +115,29 @@ export function CheckInForm({ scale }: { scale: { score: number; text: string }[
         </div>
       </fieldset>
 
-      {urgent && <p role="alert" className="rounded-2xl border border-red/30 bg-red-soft px-3.5 py-3 text-sm font-semibold text-red">Contact his vet or an emergency vet.</p>}
+      <fieldset className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-4">
+        <legend className="px-1 text-[13px] font-semibold text-ink2">Body check</legend>
+        <p className="-mt-1 text-sm text-muted">His vet asks about these at every visit. A quick look is enough.</p>
+        <Choice label="Bruising under the skin" options={["None seen", "Seen"]} value={entry.bruising} onChange={(v) => set({ bruising: v })} />
+        <Choice label="Yellow tint (jaundice) in his eyes, ear flaps or gums" options={["None seen", "Seen"]} value={entry.yellow} onChange={(v) => set({ yellow: v, yellowWhere: v === "Seen" ? entry.yellowWhere : [] })} />
+        {entry.yellow === "Seen" && (
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-1 text-[13px] font-semibold text-ink2">Where? (pick any)</legend>
+            <div className="flex flex-wrap gap-2">
+              {YELLOW_PLACES.map((p) => {
+                const on = entry.yellowWhere.includes(p);
+                return (
+                  <button key={p} type="button" aria-pressed={on} onClick={() => set({ yellowWhere: on ? entry.yellowWhere.filter((x) => x !== p) : [...entry.yellowWhere, p] })}
+                    className={`min-h-11 rounded-xl border px-4 text-sm font-semibold ${on ? "border-brand bg-brand text-on-brand" : "border-line bg-paper text-ink"}`}>{p}</button>
+                );
+              })}
+            </div>
+          </fieldset>
+        )}
+      </fieldset>
+
+      {entry.bruising === "Seen" && <p role="status" className="rounded-2xl border border-amber-fill/50 bg-amber-soft px-3.5 py-3 text-sm font-semibold text-amber">Tell his vet about the bruising, and where you saw it. You can add the place in the note below.</p>}
+      {urgent && <p role="alert" className="rounded-2xl border border-red/30 bg-red-soft px-3.5 py-3 text-sm font-semibold text-red">{entry.yellow === "Seen" ? "Yellow gums or eyes are on his warning-sign list. " : ""}Contact his vet or an emergency vet.</p>}
 
       <div className="flex flex-col gap-2">
         <label htmlFor="ci-note" className="text-[13px] font-semibold text-ink2">Note (optional)</label>

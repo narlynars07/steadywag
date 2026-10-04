@@ -6,22 +6,35 @@ export type Appetite = "Ate all" | "Some" | "None";
 export type Energy = "Normal" | "Lower than usual";
 export type YesNo = "Yes" | "No";
 export type MedsGiven = "All given" | "Missed one";
+export type Drinking = "Less than usual" | "Normal" | "More than usual";
+export type Seen = "None seen" | "Seen";
 export const ACTIVITIES = ["Walk", "Played or ran", "Puzzle or sniff game", "Mostly rested"] as const;
 export type Activity = (typeof ACTIVITIES)[number];
+export const YELLOW_PLACES = ["Eyes", "Ear flaps", "Gums"] as const;
+export type YellowPlace = (typeof YELLOW_PLACES)[number];
 
 export interface CheckIn {
   date: string; // YYYY-MM-DD, the family's own day
   appetite: Appetite | null;
+  /** Drinking compared with his usual. His vet asks about this at every visit. */
+  drinking: Drinking | null;
   energy: Energy | null;
   stool: number | null; // 1 to 7
   vomit: YesNo | null;
   meds: MedsGiven | null;
   /** What he did today. Any combination. Older entries have none. */
   activity: Activity[];
+  /** Bruising under the skin. His vet asks about this at every visit. */
+  bruising: Seen | null;
+  /** A yellow tint (jaundice), and where it was seen. His vet asks about this at every visit. */
+  yellow: Seen | null;
+  yellowWhere: YellowPlace[];
   note: string;
 }
 
-export const EMPTY_CHECKIN = (date: string): CheckIn => ({ date, appetite: null, energy: null, stool: null, vomit: null, meds: null, activity: [], note: "" });
+export const EMPTY_CHECKIN = (date: string): CheckIn => ({
+  date, appetite: null, drinking: null, energy: null, stool: null, vomit: null, meds: null, activity: [], bruising: null, yellow: null, yellowWhere: [], note: "",
+});
 
 export const STORE_KEY = "steadywag.checkins.v1";
 let memory: string | undefined;
@@ -44,22 +57,40 @@ function write(value: string) {
   listeners.forEach((l) => l());
 }
 
+const APPETITE = ["Ate all", "Some", "None"] as const, ENERGY = ["Normal", "Lower than usual"] as const, YESNO = ["Yes", "No"] as const, MEDS = ["All given", "Missed one"] as const;
+const DRINKING = ["Less than usual", "Normal", "More than usual"] as const, SEEN = ["None seen", "Seen"] as const;
+const pick = <T extends string>(v: unknown, allowed: readonly T[]): T | null => (typeof v === "string" && (allowed as readonly string[]).includes(v) ? (v as T) : null);
+const pickMany = <T extends string>(v: unknown, allowed: readonly T[]): T[] => (Array.isArray(v) ? v.filter((a): a is T => typeof a === "string" && (allowed as readonly string[]).includes(a)) : []);
+
+/** Turns anything read from storage or a backup file into a well-formed entry. Older entries without the newer fields still load. */
+function clean(e: unknown): CheckIn | null {
+  if (!e || typeof e !== "object") return null;
+  const o = e as Record<string, unknown>;
+  if (typeof o.date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(o.date)) return null;
+  const stool = typeof o.stool === "number" && Number.isInteger(o.stool) && o.stool >= 1 && o.stool <= 7 ? o.stool : null;
+  const yellow = pick(o.yellow, SEEN);
+  return {
+    date: o.date, appetite: pick(o.appetite, APPETITE), drinking: pick(o.drinking, DRINKING), energy: pick(o.energy, ENERGY), stool,
+    vomit: pick(o.vomit, YESNO), meds: pick(o.meds, MEDS), activity: pickMany(o.activity, ACTIVITIES),
+    bruising: pick(o.bruising, SEEN), yellow, yellowWhere: yellow === "Seen" ? pickMany(o.yellowWhere, YELLOW_PLACES) : [],
+    note: typeof o.note === "string" ? o.note.slice(0, 200) : "",
+  };
+}
+
+const newestFirst = (a: CheckIn, b: CheckIn) => b.date.localeCompare(a.date);
+
 export function parse(raw: string): CheckIn[] {
   if (!raw) return [];
   try {
     const v = JSON.parse(raw);
-    if (!Array.isArray(v)) return [];
-    return v
-      .filter((e): e is CheckIn => !!e && typeof e.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(e.date))
-      .map((e) => ({ ...e, activity: Array.isArray(e.activity) ? e.activity.filter((a) => (ACTIVITIES as readonly string[]).includes(a)) : [] }))
-      .sort((a, b) => b.date.localeCompare(a.date));
+    return Array.isArray(v) ? v.map(clean).filter((e): e is CheckIn => !!e).sort(newestFirst) : [];
   } catch { return []; }
 }
 
 /** One entry per day: saving today again replaces today. */
 export function saveCheckIn(entry: CheckIn) {
   const all = parse(snapshot()).filter((e) => e.date !== entry.date);
-  write(JSON.stringify([entry, ...all].sort((a, b) => b.date.localeCompare(a.date))));
+  write(JSON.stringify([entry, ...all].sort(newestFirst)));
 }
 
 export function eraseCheckIns() { write(""); }
@@ -70,25 +101,16 @@ export function deleteCheckIn(date: string) {
   write(rest.length ? JSON.stringify(rest) : "");
 }
 
-const APPETITE = ["Ate all", "Some", "None"] as const, ENERGY = ["Normal", "Lower than usual"] as const, YESNO = ["Yes", "No"] as const, MEDS = ["All given", "Missed one"] as const;
-const pick = <T extends string>(v: unknown, allowed: readonly T[]): T | null => (typeof v === "string" && (allowed as readonly string[]).includes(v) ? (v as T) : null);
-
 /** Reads a backup file back in. Only well-formed entries are kept, and a restored day replaces the same day already saved. Returns how many were restored. */
 export function importCheckIns(text: string): number {
   let list: unknown;
   try { list = JSON.parse(text); } catch { return 0; }
   if (!Array.isArray(list)) return 0;
-  const clean: CheckIn[] = [];
-  for (const e of list) {
-    if (!e || typeof e !== "object" || typeof (e as CheckIn).date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test((e as CheckIn).date)) continue;
-    const o = e as Record<string, unknown>;
-    const stool = typeof o.stool === "number" && Number.isInteger(o.stool) && o.stool >= 1 && o.stool <= 7 ? o.stool : null;
-    clean.push({ date: o.date as string, appetite: pick(o.appetite, APPETITE), energy: pick(o.energy, ENERGY), stool, vomit: pick(o.vomit, YESNO), meds: pick(o.meds, MEDS), activity: Array.isArray(o.activity) ? o.activity.filter((a): a is Activity => (ACTIVITIES as readonly string[]).includes(a as string)) : [], note: typeof o.note === "string" ? o.note.slice(0, 200) : "" });
-  }
-  if (!clean.length) return 0;
-  const keep = parse(snapshot()).filter((e) => !clean.some((c) => c.date === e.date));
-  write(JSON.stringify([...clean, ...keep].sort((a, b) => b.date.localeCompare(a.date))));
-  return clean.length;
+  const incoming = list.map(clean).filter((e): e is CheckIn => !!e);
+  if (!incoming.length) return 0;
+  const keep = parse(snapshot()).filter((e) => !incoming.some((c) => c.date === e.date));
+  write(JSON.stringify([...incoming, ...keep].sort(newestFirst)));
+  return incoming.length;
 }
 
 /** A backup file the family can keep and restore from. */
@@ -101,8 +123,10 @@ export function checkInsSince(all: CheckIn[], sinceIso: string | null, limit = 1
 
 export function toCsv(all: CheckIn[]): string {
   const esc = (s: string) => `"${s.replace(/"/g, '""')}"`;
-  const rows = [["Date", "Appetite", "Energy", "Stool score", "Vomiting", "Meds", "Activity", "Note"].map(esc).join(",")];
-  for (const e of [...all].reverse()) rows.push([e.date, e.appetite ?? "", e.energy ?? "", e.stool ? String(e.stool) : "", e.vomit ?? "", e.meds ?? "", e.activity.join("; "), e.note].map((x) => esc(x)).join(","));
+  const rows = [["Date", "Appetite", "Drinking", "Energy", "Stool score", "Vomiting", "Meds", "Activity", "Bruising", "Yellow tint", "Yellow where", "Note"].map(esc).join(",")];
+  for (const e of [...all].reverse()) {
+    rows.push([e.date, e.appetite ?? "", e.drinking ?? "", e.energy ?? "", e.stool ? String(e.stool) : "", e.vomit ?? "", e.meds ?? "", e.activity.join("; "), e.bruising ?? "", e.yellow ?? "", e.yellowWhere.join("; "), e.note].map((x) => esc(x)).join(","));
+  }
   return rows.join("\r\n");
 }
 
@@ -110,10 +134,33 @@ export function toCsv(all: CheckIn[]): string {
 export function describe(e: CheckIn): string {
   const parts: string[] = [];
   if (e.appetite) parts.push(`appetite ${e.appetite.toLowerCase()}`);
+  if (e.drinking) parts.push(`drinking ${e.drinking.toLowerCase()}`);
   if (e.energy) parts.push(`energy ${e.energy.toLowerCase()}`);
   if (e.stool) parts.push(`stool score ${e.stool}`);
   if (e.vomit) parts.push(e.vomit === "Yes" ? "vomited" : "no vomiting");
   if (e.meds) parts.push(e.meds === "All given" ? "all meds given" : "a med was missed");
   if (e.activity.length) parts.push(`activity: ${e.activity.map((a) => a.toLowerCase()).join(", ")}`);
+  if (e.bruising) parts.push(e.bruising === "Seen" ? "bruising seen" : "no bruising seen");
+  if (e.yellow) parts.push(e.yellow === "Seen" ? `yellow tint seen${e.yellowWhere.length ? ` in ${e.yellowWhere.map((p) => p.toLowerCase()).join(", ")}` : ""}` : "no yellow tint seen");
   return parts.join(", ") + (e.note ? `. Note: "${e.note}"` : "");
+}
+
+/**
+ * The counts his vet asks about at every visit, across the days in a list: eating, drinking, yellow tint, bruising. Only days where the
+ * question was answered are counted, so "3 of 9 days" never claims more than was recorded. These are the family's own observations.
+ */
+export function summarize(list: CheckIn[]): string[] {
+  const out: string[] = [];
+  const of = (answered: CheckIn[], hit: (e: CheckIn) => boolean, label: string) => {
+    const n = answered.filter(hit).length;
+    if (answered.length) out.push(`${label}: ${n} of ${answered.length} ${answered.length === 1 ? "day" : "days"}`);
+  };
+  const ate = list.filter((e) => e.appetite);
+  of(ate, (e) => e.appetite !== "Ate all", "Ate less than all his food");
+  const drank = list.filter((e) => e.drinking);
+  of(drank, (e) => e.drinking === "More than usual", "Drinking more than usual");
+  of(drank, (e) => e.drinking === "Less than usual", "Drinking less than usual");
+  of(list.filter((e) => e.yellow), (e) => e.yellow === "Seen", "Yellow tint seen (eyes, ear flaps or gums)");
+  of(list.filter((e) => e.bruising), (e) => e.bruising === "Seen", "Bruising seen");
+  return out;
 }

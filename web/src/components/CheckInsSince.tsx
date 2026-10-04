@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSyncExternalStore } from "react";
-import { checkInsSince, describe, parse, snapshot, subscribe } from "@/lib/checkins";
+import { checkInsSince, describe, parse, snapshot, subscribe, summarize } from "@/lib/checkins";
 import { fmtDate } from "@/lib/format";
 
 /** The family's own check-ins since his last visit, read from this browser only. They are family-entered observations, not vet records. */
@@ -24,6 +24,12 @@ export function CheckInsSince({ sinceIso }: { sinceIso: string | null }) {
       ) : (
         <>
           <p className="mt-1 text-sm text-muted">Family-entered observations, not vet records. {list.length} {list.length === 1 ? "day" : "days"} logged.</p>
+          {summarize(list).length > 0 && (
+            <div className="mt-3 rounded-xl bg-paper px-3.5 py-3">
+              <p className="text-xs font-bold uppercase tracking-wide text-muted">What his vet usually asks</p>
+              <ul className="mt-1 space-y-0.5 text-sm text-ink">{summarize(list).map((s) => <li key={s}>{s}</li>)}</ul>
+            </div>
+          )}
           <ul className="mt-2 divide-y divide-line">
             {list.map((e) => (
               <li key={e.date} className="py-2 text-sm">
