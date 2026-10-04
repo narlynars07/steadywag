@@ -76,7 +76,7 @@ Browser ── Ask page (useChat) ──> POST /api/chat  (Next.js route, rate-l
 
 ## Install it (PWA)
 
-Steadywag is an installable web app: a web manifest (name, theme colors, icons, shortcuts to Today, Check-in and Appointments), a small service worker, and an offline page. Chrome and Android show an install button (also in the phone More menu); on iPhone, Share then Add to Home Screen. The service worker (`web/public/sw.js`) fetches pages network first, so he is never shown stale records, and keeps the last good copy as the offline fallback; static files are stale-while-revalidate. It never touches `/api` (the chat), other origins, or anything that is not a plain GET. Check-ins and appointments live in the browser's own storage, so they work offline. Asking a question needs a connection.
+Steadywag is an installable web app: a web manifest (name, theme colors, icons, shortcuts to Today, Check-in and Appointments), a small service worker, and an offline page. Chrome and Android show an install button (also in the phone More menu); on iPhone, Share then Add to Home Screen. A small card (`InstallBanner`) explains this once on phones, only after a second page or 20 seconds, never when already installed, and "Not now" hides it for 30 days. The service worker (`web/public/sw.js`) fetches pages network first, so he is never shown stale records, and keeps the last good copy as the offline fallback; static files are stale-while-revalidate. It never touches `/api` (the chat), other origins, or anything that is not a plain GET. Check-ins and appointments live in the browser's own storage, so they work offline. Asking a question needs a connection.
 
 ## Why check-ins and appointments stay on one device
 

@@ -186,6 +186,7 @@ h1, h2, h3 {
 /* On a phone, hide the bottom tab bar and the floating chat button while the keyboard is up, and let the message bar sit at the bottom. */
 @media (max-width: 767px) {
   html[data-kb="1"] .mobile-tabbar,
-  html[data-kb="1"] .chat-fab { display: none; }
+  html[data-kb="1"] .chat-fab,
+  html[data-kb="1"] .install-banner { display: none; }
   html[data-kb="1"] .composer-bar { bottom: 0.5rem; }
 }

@@ -5,6 +5,7 @@ import { Nav } from "@/components/Nav";
 import { SubNav } from "@/components/SubNav";
 import { ChatDock } from "@/components/ChatDock";
 import { KeyboardAware } from "@/components/KeyboardAware";
+import { InstallBanner } from "@/components/InstallBanner";
 import { ServiceWorker } from "@/components/ServiceWorker";
 import { THEME_BOOT } from "@/lib/theme";
 import { getDockProfile } from "@/lib/data";
@@ -52,6 +53,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         </footer>
         <KeyboardAware />
         <ServiceWorker />
+        <InstallBanner />
         <ChatDock profile={{ name: "Theo", line: "", status: "", alert: dock.alert ?? undefined, alertSince: dock.alertSince, lastVisitDate: dock.lastVisitDate }} />
       </body>
     </html>
