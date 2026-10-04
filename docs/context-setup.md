@@ -58,7 +58,7 @@ Cited veterinary guidance and one dog's documented diet plan, for a family carin
 }
 ```
 
-This reads the 9 cited guidance entries and the 16 diet rules, 25 documents in all (the limit is 5,000, and Knowledge
+This reads the 10 cited guidance entries and the 16 diet rules, 26 documents in all (the limit is 5,000, and Knowledge
 Bases index up to 150 documents). The Knowledge Base then synthesizes them into a small number of entries.
 
 Click **Build entries**. When it finishes, open the **Issues** view. If it raises conflicts, that is the feature
