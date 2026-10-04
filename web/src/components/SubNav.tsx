@@ -13,7 +13,6 @@ const HISTORY = [
 ];
 const TODAY_GROUP = [
   { href: "/today", label: "Today" },
-  { href: "/appointments", label: "Appointments" },
   { href: "/sitter", label: "Sitter brief" },
   { href: "/food", label: "Food" },
 ];

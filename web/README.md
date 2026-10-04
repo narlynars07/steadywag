@@ -25,7 +25,7 @@ Most of the value is in what a keyword search over the original PDFs could not t
 
 ## What the site does
 
-Five tabs. Four source labels are used everywhere: **Vet records**, **Family routine**, **Family recall**, **Your check-ins**.
+Six destinations (Ask, Today, Check-in, Appointments, History, Your dog). On a phone the bottom bar shows the first four plus a More sheet that holds History, Your dog, the sitter brief and food; on a larger screen the top bar shows all six. Source labels are used everywhere: **Vet records**, **Family routine**, **Family recall**, **Your check-ins**.
 
 | Route | What it is |
 | --- | --- |
