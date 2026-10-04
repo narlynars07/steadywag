@@ -44,15 +44,22 @@ export function NotGivenCallout({ name, since, variant = "full" }: { name: strin
     );
   }
 
+  // The warning itself stays on screen. The history and the open question fold away, so the card does not take over the page.
   return (
     <section role="note" aria-label={`${name} is on his list but not being given`} className="rounded-2xl border-2 border-amber-fill/60 bg-amber-soft p-4 text-amber">
       <div className="flex items-start gap-2.5">
         {WARN}
-        <div className="min-w-0 space-y-3">
+        <div className="min-w-0 flex-1">
           <h2 className="text-base font-extrabold leading-snug">{name}: on his list, but not being given</h2>
-          <div className="text-ink">{story}</div>
-          <p className="text-[15px] font-bold">Please don&apos;t give it.</p>
-          {question}
+          <p className="mt-1 text-[15px] font-bold">Please don&apos;t give it.</p>
+          <details className="group mt-1 text-ink">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center gap-1.5 text-sm font-semibold text-brand2">
+              <span className="group-open:hidden">What happened, and what&apos;s still open</span>
+              <span className="hidden group-open:inline">Hide the details</span>
+              <span aria-hidden="true" className="transition-transform group-open:rotate-180">⌄</span>
+            </summary>
+            <div className="space-y-3 pb-1 pt-1">{story}{question}</div>
+          </details>
         </div>
       </div>
     </section>
