@@ -1,17 +1,28 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Nav } from "@/components/Nav";
 import { SubNav } from "@/components/SubNav";
 import { ChatDock } from "@/components/ChatDock";
 import { KeyboardAware } from "@/components/KeyboardAware";
+import { ServiceWorker } from "@/components/ServiceWorker";
 import { THEME_BOOT } from "@/lib/theme";
 import { getDockProfile } from "@/lib/data";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 const jetbrains = JetBrains_Mono({ variable: "--font-jetbrains", subsets: ["latin"] });
 
+// The browser and status bar color follow the light or dark theme.
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f6f4f9" },
+    { media: "(prefers-color-scheme: dark)", color: "#120f1d" },
+  ],
+};
+
 export const metadata: Metadata = {
+  applicationName: "Steadywag",
+  appleWebApp: { capable: true, title: "Steadywag", statusBarStyle: "default" },
   metadataBase: new URL("https://steadywag.com"),
   openGraph: { siteName: "Steadywag", type: "website" },
   title: "Steadywag",
@@ -40,6 +51,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           Steadywag tracks and prepares. It never diagnoses, doses, or replaces his vet. Records are de-identified.
         </footer>
         <KeyboardAware />
+        <ServiceWorker />
         <ChatDock profile={{ name: "Theo", line: "", status: "", alert: dock.alert ?? undefined, alertSince: dock.alertSince, lastVisitDate: dock.lastVisitDate }} />
       </body>
     </html>

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
+import { InstallApp } from "./InstallApp";
 import { ThemeToggle } from "./ThemeToggle";
 import { resetConversation } from "@/lib/conversation";
 import { useLocalDay } from "@/lib/useLocalDay";
@@ -160,6 +161,7 @@ export function Nav() {
               <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-muted">Appearance</p>
               <ThemeToggle variant="full" />
             </section>
+            <InstallApp />
             {MORE.map((g) => (
               <section key={g.title} className="mt-3" aria-label={g.title}>
                 <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-muted">{g.title}</p>

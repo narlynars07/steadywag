@@ -74,6 +74,10 @@ Browser ── Ask page (useChat) ──> POST /api/chat  (Next.js route, rate-l
 - **Fallback:** if the Context endpoints are not configured or unreachable, the agent queries the same public dataset directly. This is deliberate, but it is never silent. The server logs a JSON `agent_fallback` line with the reason, and the answer shows a visible "Direct query, not Sanity Context" notice.
 - **Cost protection:** per-visitor and site-wide daily question limits (`web/src/lib/limits.ts`), counted in Upstash Redis. Set the model provider's workspace spend limit as well.
 
+## Install it (PWA)
+
+Steadywag is an installable web app: a web manifest (name, theme colors, icons, shortcuts to Today, Check-in and Appointments), a small service worker, and an offline page. Chrome and Android show an install button (also in the phone More menu); on iPhone, Share then Add to Home Screen. The service worker (`web/public/sw.js`) fetches pages network first, so he is never shown stale records, and keeps the last good copy as the offline fallback; static files are stale-while-revalidate. It never touches `/api` (the chat), other origins, or anything that is not a plain GET. Check-ins and appointments live in the browser's own storage, so they work offline. Asking a question needs a connection.
+
 ## Why check-ins and appointments stay on one device
 
 His medical record is shared: it lives in Sanity, so every device sees the same thing. His check-ins, appointments and theme are personal logs, and they live in the visitor's own browser on purpose. They are private health details, so nothing is stored on a server; and saving to a server would need accounts, because without sign-in every visitor's entries would land in one shared pile. Each page says "Saved on this device only" at the top, and a backup file moves the data to another device. The next step for a real product is sign-in plus a private database so the logs follow a family across devices (see `docs/keeping-the-record-current.md`).
