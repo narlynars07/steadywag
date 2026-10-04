@@ -392,7 +392,8 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false, onN
   );
 
   const emptyChat = (
-    <div className="flex h-full flex-col items-center justify-center gap-5 px-6 py-8 text-center">
+    // Safe centering: auto margins on the first and last child center the block when it fits and let it start at the top (and scroll) when it does not.
+    <div className="flex min-h-full flex-col items-center gap-5 px-6 py-8 text-center [&>:first-child]:mt-auto [&>:last-child]:mb-auto">
       <Image src="/theo.jpg" alt="" width={144} height={144} loading="eager" className="h-[72px] w-[72px] rounded-full object-cover object-[50%_30%] shadow-[0_0_0_4px_var(--brand-soft)]" />
       <div>
         <h2 className="text-[28px] font-extrabold leading-tight tracking-tight text-ink">What would you like to know about Theo?</h2>
