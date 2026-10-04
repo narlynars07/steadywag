@@ -26,9 +26,9 @@ export const metadata: Metadata = {
   appleWebApp: { capable: true, title: "Steadywag", statusBarStyle: "default" },
   metadataBase: new URL("https://steadywag.com"),
   openGraph: { siteName: "Steadywag", type: "website" },
-  title: "Steadywag: a care companion for Theo",
+  title: "Steadywag: a care companion",
   description:
-    "Ask about his records, follow his day, log daily check-ins and walk into every vet visit prepared. It tells you what the paperwork doesn't say.",
+    "A care companion for a dog with a chronic illness. Ask about his records, follow his day, log daily check-ins and prepare for every vet visit.",
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
