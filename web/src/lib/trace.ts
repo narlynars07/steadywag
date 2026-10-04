@@ -86,6 +86,7 @@ export function traceSteps(lookups: Lookup[]): { text: string; done: boolean }[]
     if (name === "knowledge_base_search" || name === "knowledge_base_read") add("Checking the guide", done);
     else if (name === "schema_explorer") add("Checking how his records are organized", done);
     else if (name === "usda_food_lookup") add("Looking up USDA food data", done);
+    else if (name === "web_search") add("Searching trusted veterinary sources", done);
     else if (name === "array_field_reader") add("Reading a record in detail", done);
     else {
       const types = typesInQuery(queryText(l.input)).slice(0, 3);

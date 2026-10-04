@@ -141,7 +141,8 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false, onN
     if (live && rows.length === 0) rows.push({ text: "Getting started", done: false });
     if (live && rows.length > 0 && lookups.every(isDone)) rows.push({ text: text ? "Writing the answer" : "Putting the answer together", done: false });
     const finished = !live && text.length > 0;
-    const chips = finished ? sourceChips(lookups, isLast && session.usedCheckIns) : [];
+    const web = m.parts.flatMap((p) => (p.type === "source-url" ? [{ label: `From the web: ${new URL(p.url).hostname.replace(/^www\./, "")}`, href: p.url }] : []));
+    const chips = finished ? [...sourceChips(lookups, isLast && session.usedCheckIns), ...web.filter((w, i, a) => a.findIndex((x) => x.href === w.href) === i).slice(0, 4)] : [];
     return (
       <div key={m.id} className="flex flex-col gap-3.5">
         {m.metadata?.agentMode === "direct" && (
