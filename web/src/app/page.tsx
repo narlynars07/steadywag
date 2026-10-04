@@ -21,6 +21,7 @@ export default async function AskPage({ searchParams }: PageProps<"/">) {
         line: `${ageYears(dog.birthYear)}-year-old ${dog.breed}${lastWeight ? ` · ${lastWeight.weightKg} kg` : ""}`,
         status: lastVisit ? `Doing very well at his ${fmtDate(lastVisit.date)} visit` : "Records on file",
         alert: notGiven?.name,
+        alertSince: notGiven?.startDate,
         lastVisitDate: lastVisit?.date ?? null,
       }}
     />

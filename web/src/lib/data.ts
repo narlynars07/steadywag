@@ -126,8 +126,9 @@ export const getHistoryPatterns = () =>
 
 /** What the floating chat needs: the not-given medication and the date of his last specialist visit. */
 export const getDockProfile = () =>
-  sanityFetch<{ alert: string | null; lastVisitDate: string | null }>(`{
+  sanityFetch<{ alert: string | null; alertSince: string | null; lastVisitDate: string | null }>(`{
     "alert": *[_type == "medication" && status == "listed-not-given"][0].name,
+    "alertSince": *[_type == "medication" && status == "listed-not-given"][0].startDate,
     "lastVisitDate": *[_type == "vetVisit" && visitType == "specialist-recheck"] | order(date desc)[0].date
   }`);
 

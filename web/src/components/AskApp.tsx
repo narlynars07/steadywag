@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Rich } from "./Rich";
+import { NotGivenCallout } from "./NotGivenCallout";
 import { SourcesPanel } from "./SourcesPanel";
 import { getChat, session, setSession, type ChatMessage } from "@/lib/conversation";
 import { checkInsSince, parse, snapshot } from "@/lib/checkins";
@@ -18,6 +19,7 @@ export interface AskProfile {
   line: string; // "8-year-old Shih Tzu mix · 10 kg"
   status: string; // "Doing very well at his Aug 25 visit"
   alert?: string; // the not-given medication, if there is one
+  alertSince?: string | null; // when it was prescribed
   lastVisitDate: string | null;
 }
 
@@ -290,12 +292,7 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false, onN
         </form>
       </div>
 
-      {profile.alert && (
-        <div role="note" className="flex items-start gap-2.5 rounded-2xl border border-amber-fill/50 bg-amber-soft px-3.5 py-3 text-sm leading-snug text-amber lg:px-3 lg:py-2.5 lg:text-[13px]">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="mt-0.5 shrink-0"><path d="M12 4l9 16H3z" /><path d="M12 10v4M12 17h.01" /></svg>
-          <p><strong className="font-semibold">{profile.alert} is on his written list, but don&apos;t give it.</strong> A verbal instruction never made it onto the paperwork.</p>
-        </div>
-      )}
+      {profile.alert && <NotGivenCallout name={profile.alert} since={profile.alertSince} variant="compact" />}
 
       <p className="-mb-1 text-xs font-bold uppercase tracking-[0.08em] text-muted">Or start with a task</p>
 
@@ -361,12 +358,7 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false, onN
           <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-green-fill" />
           {profile.status}
         </p>
-        {profile.alert && (
-          <div role="note" className="mt-3 flex items-start gap-2 rounded-xl bg-amber-soft p-3 text-[13px] leading-snug text-amber">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="mt-0.5 shrink-0"><path d="M12 4l9 16H3z" /><path d="M12 10v4M12 17h.01" /></svg>
-            <p><strong className="font-semibold">Don&apos;t give {profile.alert}.</strong> It&apos;s on his written list, but a verbal instruction never made it onto the paperwork.</p>
-          </div>
-        )}
+        {profile.alert && <div className="mt-3"><NotGivenCallout name={profile.alert} since={profile.alertSince} variant="compact" /></div>}
       </section>
 
       <div>

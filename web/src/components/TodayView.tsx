@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { NextAppointment } from "./NextAppointment";
+import { NotGivenCallout } from "./NotGivenCallout";
 import { Chip } from "./ui";
 import { SOURCE_LABEL, dueOn, vetTiming } from "@/lib/care";
 import { doseLine, freqLabel } from "@/lib/format";
@@ -16,6 +17,7 @@ export interface TodayData {
   routine: CareRoutine[];
   meds: Medication[];
   notGiven?: string;
+  notGivenSince?: string | null;
   treatRule?: string;
   recipe?: string;
   conflict?: { name: string; note: string };
@@ -114,11 +116,7 @@ export function TodayView({ data }: { data: TodayData }) {
         </p>
       </div>
 
-      {data.notGiven && (
-        <div role="note" className="rounded-2xl border border-amber-fill/50 bg-amber-soft px-3.5 py-3 text-sm leading-snug text-amber">
-          <strong className="font-semibold">{data.notGiven} is on his written list, but don&apos;t give it.</strong> A verbal instruction never made it onto the paperwork.
-        </div>
-      )}
+      {data.notGiven && <NotGivenCallout name={data.notGiven} since={data.notGivenSince} />}
 
       <NextAppointment />
 

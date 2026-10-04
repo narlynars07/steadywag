@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const dock = await getDockProfile().catch(() => ({ alert: null, lastVisitDate: null }));
+  const dock = await getDockProfile().catch(() => ({ alert: null, alertSince: null, lastVisitDate: null }));
   return (
     // suppressHydrationWarning: browser extensions often add attributes to <html> before React loads.
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${jetbrains.variable} h-full antialiased`}>
@@ -36,7 +36,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           Steadywag tracks and prepares. It never diagnoses, doses, or replaces his vet. Records are de-identified.
         </footer>
         <KeyboardAware />
-        <ChatDock profile={{ name: "Theo", line: "", status: "", alert: dock.alert ?? undefined, lastVisitDate: dock.lastVisitDate }} />
+        <ChatDock profile={{ name: "Theo", line: "", status: "", alert: dock.alert ?? undefined, alertSince: dock.alertSince, lastVisitDate: dock.lastVisitDate }} />
       </body>
     </html>
   );

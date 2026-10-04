@@ -13,6 +13,7 @@ export default async function TodayPage() {
         routine,
         meds: meds.filter((m) => m.status === "active" || m.status === "listed-not-given"),
         notGiven: meds.find((m) => m.status === "listed-not-given")?.name,
+        notGivenSince: meds.find((m) => m.status === "listed-not-given")?.startDate,
         treatRule: rules.find((r) => r._id === "dietRule-treat-allowance")?.rule,
         recipe: rules.find((r) => r._id === "dietRule-recipe")?.rule,
         conflict: conflict ? { name: conflict.name, note: conflict.note ?? "" } : undefined,
