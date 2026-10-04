@@ -6,7 +6,7 @@ import { AskApp, type AskContext, type AskProfile } from "./AskApp";
 
 /** What the window offers on each page: its name and questions that fit what you are looking at. */
 const CONTEXTS: { match: (p: string) => boolean; label: string; title: string; suggestions: string[] }[] = [
-  { match: (p) => p.startsWith("/today"), label: "Ask about today", title: "Ask about today", suggestions: ["Is anything on his list not being given?", "When is penicillamine due?", "What should I watch for tonight?"] },
+  { match: (p) => p.startsWith("/today"), label: "Ask about his day", title: "Ask about his day", suggestions: ["Is anything on his list not being given?", "When is penicillamine due?", "What should I watch for tonight?"] },
   { match: (p) => p.startsWith("/appointments"), label: "Ask about visits", title: "Ask about his visits", suggestions: ["What should we ask at his next recheck?", "What records are missing?", "Does his recheck need fasting?"] },
   { match: (p) => p.startsWith("/dna"), label: "Ask about his DNA", title: "Ask about his DNA", suggestions: ["Which breeds are in his mix?", "Did his DNA test check for copper?", "What did his DNA show about bleeding disorders?"] },
   { match: (p) => p.startsWith("/meds"), label: "Ask about his meds", title: "Ask about his medications", suggestions: ["Is anything on his list not being given?", "Which Cerenia schedule is current?", "How often does he take Atopica?"] },
