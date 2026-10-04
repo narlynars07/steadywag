@@ -113,6 +113,11 @@ export async function POST(req: Request) {
   return createUIMessageStreamResponse({
     stream: toUIMessageStream({
       stream: result.stream,
+      // A failed model call (for example an empty API balance or a provider outage) is logged with its real reason and shown to the visitor in plain words.
+      onError: (error) => {
+        console.error(JSON.stringify({ event: "model_error", message: String(error instanceof Error ? error.message : error).slice(0, 300), at: new Date().toISOString() }));
+        return "The assistant is temporarily unavailable. Please try again in a few minutes.";
+      },
       // Sent with the answer itself, so the label belongs to this answer and not to whichever response arrived last.
       messageMetadata: ({ part }) => (part.type === "start" ? { agentMode: agent.mode } : undefined),
     }),

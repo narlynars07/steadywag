@@ -115,7 +115,17 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false, onN
 
   // When a new question is sent, bring it to the top of the view so its answer streams in underneath it.
   const userCount = messages.filter((m) => m.role === "user").length;
-  useEffect(() => { if (userCount > 0) lastUserRef.current?.scrollIntoView({ block: "start", behavior: "smooth" }); }, [userCount]);
+  useEffect(() => {
+    const el = lastUserRef.current;
+    if (!el || userCount === 0) return;
+    // Scroll inside the chat window when it has its own scrolling area. Scrolling the whole page would push the follow-up bar off the screen.
+    const box = el.closest<HTMLElement>("[data-chat-scroll]");
+    if (box && box.scrollHeight > box.clientHeight && /(auto|scroll)/.test(getComputedStyle(box).overflowY)) {
+      box.scrollTo({ top: el.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop - 12, behavior: "smooth" });
+    } else {
+      el.scrollIntoView({ block: "start", behavior: "smooth" });
+    }
+  }, [userCount]);
 
   const backCls = compact ? "" : "lg:hidden";
 
@@ -219,6 +229,7 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false, onN
       {error && <p role="alert" className="rounded-xl bg-red-soft px-4 py-3 text-sm text-red">{friendly(error)}</p>}
       <p className="text-xs leading-relaxed text-muted">Steadywag tracks and prepares. It never diagnoses, doses, or replaces his vet.</p>
       {composer(true)}
+      <div aria-hidden="true" className="h-4 lg:h-0" />
     </div>
   );
 
@@ -407,12 +418,12 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false, onN
   const right = threadStarted ? renderThread() : pending ? renderInput() : null;
   if (compact) return right ?? renderHome();
   return (
-    <div className="mx-auto grid max-w-5xl gap-6 lg:h-[calc(100vh-9rem)] lg:min-h-[560px] lg:grid-cols-[300px_minmax(0,1fr)] lg:items-stretch lg:gap-5">
+    <div className="mx-auto grid max-w-5xl gap-6 lg:h-[calc(100vh-9rem)] lg:min-h-[560px] lg:grid-cols-[300px_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)] lg:items-stretch lg:gap-5">
       <div className={`${right ? "hidden lg:block" : ""} lg:min-h-0 lg:overflow-y-auto lg:pr-1`}>
         <div className="lg:hidden">{renderHome()}</div>
         <div className="hidden lg:block">{renderSidebar()}</div>
       </div>
-      <div className={`${right ? "" : "hidden lg:flex"} flex-col lg:h-full lg:min-h-0 lg:overflow-hidden lg:rounded-2xl lg:border lg:border-line lg:bg-surface`}>
+      <div className={`${right ? "flex" : "hidden lg:flex"} flex-col lg:h-full lg:min-h-0 lg:overflow-hidden lg:rounded-2xl lg:border lg:border-line lg:bg-surface`}>
         <div className="hidden items-center gap-3 border-b border-line px-5 py-3 lg:flex">
           <div className="min-w-0 flex-1">
             <p className="text-sm font-bold leading-tight text-ink">Ask about Theo</p>
@@ -420,7 +431,7 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false, onN
           </div>
           {threadStarted && <button type="button" onClick={back} className="min-h-11 rounded-full px-3 text-sm font-semibold text-brand2 hover:bg-brand-soft">New question</button>}
         </div>
-        <div className="lg:flex-1 lg:overflow-y-auto lg:p-4">
+        <div data-chat-scroll className="lg:flex-1 lg:overflow-y-auto lg:p-4 lg:pb-8">
           {right ?? <div className="hidden h-full lg:block">{emptyChat}</div>}
         </div>
         {(threadStarted || pending) && (
@@ -445,5 +456,6 @@ function friendly(err: Error): string {
     const parsed = JSON.parse(err.message);
     if (parsed?.error) return String(parsed.error);
   } catch { /* not JSON */ }
+  if (/temporarily unavailable/i.test(err.message)) return err.message;
   return "Something went wrong reaching the assistant. Please try again.";
 }
