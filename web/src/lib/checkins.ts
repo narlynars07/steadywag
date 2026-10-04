@@ -6,6 +6,8 @@ export type Appetite = "Ate all" | "Some" | "None";
 export type Energy = "Normal" | "Lower than usual";
 export type YesNo = "Yes" | "No";
 export type MedsGiven = "All given" | "Missed one";
+export const ACTIVITIES = ["Walk", "Played or ran", "Puzzle or sniff game", "Mostly rested"] as const;
+export type Activity = (typeof ACTIVITIES)[number];
 
 export interface CheckIn {
   date: string; // YYYY-MM-DD, the family's own day
@@ -14,10 +16,12 @@ export interface CheckIn {
   stool: number | null; // 1 to 7
   vomit: YesNo | null;
   meds: MedsGiven | null;
+  /** What he did today. Any combination. Older entries have none. */
+  activity: Activity[];
   note: string;
 }
 
-export const EMPTY_CHECKIN = (date: string): CheckIn => ({ date, appetite: null, energy: null, stool: null, vomit: null, meds: null, note: "" });
+export const EMPTY_CHECKIN = (date: string): CheckIn => ({ date, appetite: null, energy: null, stool: null, vomit: null, meds: null, activity: [], note: "" });
 
 export const STORE_KEY = "steadywag.checkins.v1";
 let memory: string | undefined;
@@ -47,6 +51,7 @@ export function parse(raw: string): CheckIn[] {
     if (!Array.isArray(v)) return [];
     return v
       .filter((e): e is CheckIn => !!e && typeof e.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(e.date))
+      .map((e) => ({ ...e, activity: Array.isArray(e.activity) ? e.activity.filter((a) => (ACTIVITIES as readonly string[]).includes(a)) : [] }))
       .sort((a, b) => b.date.localeCompare(a.date));
   } catch { return []; }
 }
@@ -78,7 +83,7 @@ export function importCheckIns(text: string): number {
     if (!e || typeof e !== "object" || typeof (e as CheckIn).date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test((e as CheckIn).date)) continue;
     const o = e as Record<string, unknown>;
     const stool = typeof o.stool === "number" && Number.isInteger(o.stool) && o.stool >= 1 && o.stool <= 7 ? o.stool : null;
-    clean.push({ date: o.date as string, appetite: pick(o.appetite, APPETITE), energy: pick(o.energy, ENERGY), stool, vomit: pick(o.vomit, YESNO), meds: pick(o.meds, MEDS), note: typeof o.note === "string" ? o.note.slice(0, 200) : "" });
+    clean.push({ date: o.date as string, appetite: pick(o.appetite, APPETITE), energy: pick(o.energy, ENERGY), stool, vomit: pick(o.vomit, YESNO), meds: pick(o.meds, MEDS), activity: Array.isArray(o.activity) ? o.activity.filter((a): a is Activity => (ACTIVITIES as readonly string[]).includes(a as string)) : [], note: typeof o.note === "string" ? o.note.slice(0, 200) : "" });
   }
   if (!clean.length) return 0;
   const keep = parse(snapshot()).filter((e) => !clean.some((c) => c.date === e.date));
@@ -96,8 +101,8 @@ export function checkInsSince(all: CheckIn[], sinceIso: string | null, limit = 1
 
 export function toCsv(all: CheckIn[]): string {
   const esc = (s: string) => `"${s.replace(/"/g, '""')}"`;
-  const rows = [["Date", "Appetite", "Energy", "Stool score", "Vomiting", "Meds", "Note"].map(esc).join(",")];
-  for (const e of [...all].reverse()) rows.push([e.date, e.appetite ?? "", e.energy ?? "", e.stool ? String(e.stool) : "", e.vomit ?? "", e.meds ?? "", e.note].map((x) => esc(x)).join(","));
+  const rows = [["Date", "Appetite", "Energy", "Stool score", "Vomiting", "Meds", "Activity", "Note"].map(esc).join(",")];
+  for (const e of [...all].reverse()) rows.push([e.date, e.appetite ?? "", e.energy ?? "", e.stool ? String(e.stool) : "", e.vomit ?? "", e.meds ?? "", e.activity.join("; "), e.note].map((x) => esc(x)).join(","));
   return rows.join("\r\n");
 }
 
@@ -109,5 +114,6 @@ export function describe(e: CheckIn): string {
   if (e.stool) parts.push(`stool score ${e.stool}`);
   if (e.vomit) parts.push(e.vomit === "Yes" ? "vomited" : "no vomiting");
   if (e.meds) parts.push(e.meds === "All given" ? "all meds given" : "a med was missed");
+  if (e.activity.length) parts.push(`activity: ${e.activity.map((a) => a.toLowerCase()).join(", ")}`);
   return parts.join(", ") + (e.note ? `. Note: "${e.note}"` : "");
 }

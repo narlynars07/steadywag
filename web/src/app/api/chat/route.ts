@@ -21,6 +21,7 @@ const CheckIn = z.object({
   stool: z.number().int().min(1).max(7).nullable().optional(),
   vomit: z.enum(["Yes", "No"]).nullable().optional(),
   meds: z.enum(["All given", "Missed one"]).nullable().optional(),
+  activity: z.array(z.enum(["Walk", "Played or ran", "Puzzle or sniff game", "Mostly rested"])).max(4).optional(),
   note: z.string().max(200).optional(),
 });
 const Extra = z.object({
@@ -46,6 +47,7 @@ function checkInBlock(items: z.infer<typeof CheckIn>[]): string {
     const parts = [
       e.appetite && `appetite ${e.appetite.toLowerCase()}`, e.energy && `energy ${e.energy.toLowerCase()}`, e.stool && `stool score ${e.stool}`,
       e.vomit && (e.vomit === "Yes" ? "vomited" : "no vomiting"), e.meds && (e.meds === "All given" ? "all meds given" : "a med was missed"),
+      e.activity?.length && `activity: ${e.activity.join(", ").toLowerCase()}`,
       e.note && `note: "${clean(e.note)}"`,
     ].filter(Boolean);
     return `- ${e.date}: ${parts.join("; ") || "no answers"}`;

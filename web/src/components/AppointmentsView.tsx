@@ -22,7 +22,9 @@ function download(name: string, type: string, body: string) {
 
 const BLANK = (date: string): Appointment => ({ id: "", kind: "vet", date, time: "", title: "", place: "", notes: "" });
 
-export function AppointmentsView() {
+export interface Suggestion { date: string; title: string; basis: string; notes: string }
+
+export function AppointmentsView({ suggestion }: { suggestion?: Suggestion | null }) {
   const today = useLocalDay();
   const raw = useSyncExternalStore(subscribe, snapshot, () => "");
   const all = parse(raw);
@@ -40,6 +42,8 @@ export function AppointmentsView() {
   const set = (patch: Partial<Appointment>) => setDraft({ ...form, ...patch });
 
   const upcoming = all.filter((a) => a.date >= today);
+  // Offer his specialist's own recheck plan until a vet appointment is on the calendar.
+  const showSuggestion = !!suggestion && !!today && !upcoming.some((a) => a.kind === "vet");
   const past = all.filter((a) => a.date < today).reverse();
 
   const save = (e: React.FormEvent) => {
@@ -98,6 +102,16 @@ export function AppointmentsView() {
           <ul className="divide-y divide-line rounded-2xl border border-line bg-surface">{upcoming.map((a) => <Row key={a.id} a={a} />)}</ul>
         )}
       </section>
+
+      {showSuggestion && suggestion && (
+        <section aria-label="Suggested from his records" className="rounded-2xl border border-brand bg-brand-soft px-4 py-3">
+          <p className="text-xs font-bold uppercase tracking-wide text-brand2">Suggested from his records</p>
+          <p className="mt-0.5 text-[15px] font-bold text-ink">{suggestion.title} · around {fmtDate(suggestion.date)}</p>
+          <p className="text-sm text-ink2">{suggestion.basis} The date is an estimate.</p>
+          <button type="button" onClick={() => { setDraft({ ...BLANK(suggestion.date), kind: "vet", title: suggestion.title, notes: suggestion.notes }); setFlash(""); formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }}
+            className="mt-1 min-h-11 rounded-xl bg-brand px-4 text-sm font-bold text-on-brand">Use this in the form</button>
+        </section>
+      )}
 
       <form ref={formRef} onSubmit={save} className="scroll-mt-24 flex flex-col gap-3 rounded-2xl border border-line bg-surface p-4" aria-labelledby="form-h">
         <h2 id="form-h" className="text-lg font-extrabold tracking-tight text-ink">{editing ? "Edit appointment" : "Add an appointment"}</h2>

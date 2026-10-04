@@ -26,13 +26,15 @@ export default async function SitterPage() {
       <div>
         <p className="text-xs font-bold uppercase tracking-[0.08em] text-brand2">For whoever is covering</p>
         <h1 className="text-[28px] font-extrabold leading-tight tracking-tight text-ink">Sitter brief for Theo</h1>
-        <p className="mt-1 text-[15px] leading-relaxed text-ink2">Built from his records and his family&apos;s routine. Read the first box first.</p>
+        <p className="mt-1 text-[15px] leading-relaxed text-ink2">Built from his records and his family&apos;s routine.</p>
       </div>
 
-      <div role="note" className="print-card rounded-2xl border-2 border-amber-fill bg-amber-soft px-4 py-3 text-[15px] leading-snug text-amber">
-        <strong className="font-semibold">The paperwork would get this wrong: {notGiven?.name?.toLowerCase() ?? "ursodiol"} is on his written list, but don&apos;t give it.</strong>{" "}
-        A caregiver was told verbally not to give it, and nothing written says so.
-      </div>
+      {notGiven && (
+        <div role="note" className="print-card rounded-2xl border-2 border-amber-fill bg-amber-soft px-4 py-3 text-[15px] leading-snug text-amber">
+          <strong className="font-semibold">The paperwork would get this wrong: {notGiven.name.toLowerCase()} is on his written list, but don&apos;t give it.</strong>{" "}
+          A caregiver was told verbally not to give it, and nothing written says so.
+        </div>
+      )}
 
       <section className="print-card flex flex-col gap-3" aria-labelledby="day">
         <h2 id="day" className="text-lg font-extrabold tracking-tight text-ink">His day, in order</h2>

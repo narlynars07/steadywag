@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRef, useState, useSyncExternalStore } from "react";
-import { EMPTY_CHECKIN, deleteCheckIn, describe, eraseCheckIns, importCheckIns, parse, saveCheckIn, snapshot, subscribe, toCsv, toJson, type CheckIn } from "@/lib/checkins";
+import { ACTIVITIES, EMPTY_CHECKIN, deleteCheckIn, describe, eraseCheckIns, importCheckIns, parse, saveCheckIn, snapshot, subscribe, toCsv, toJson, type CheckIn } from "@/lib/checkins";
 import { fmtDate } from "@/lib/format";
 import { useLocalDay } from "@/lib/useLocalDay";
 
@@ -100,6 +100,19 @@ export function CheckInForm({ scale }: { scale: { score: number; text: string }[
 
       <Choice label="Vomiting" options={["No", "Yes"]} value={entry.vomit} onChange={(v) => set({ vomit: v })} />
       <Choice label="Medications" options={["All given", "Missed one"]} value={entry.meds} onChange={(v) => set({ meds: v })} />
+
+      <fieldset className="flex flex-col gap-2">
+        <legend className="mb-1 text-[13px] font-semibold text-ink2">Activity today (pick any)</legend>
+        <div className="flex flex-wrap gap-2">
+          {ACTIVITIES.map((a) => {
+            const on = entry.activity.includes(a);
+            return (
+              <button key={a} type="button" aria-pressed={on} onClick={() => set({ activity: on ? entry.activity.filter((x) => x !== a) : [...entry.activity.filter((x) => (a === "Mostly rested" ? false : x !== "Mostly rested")), a] })}
+                className={`min-h-11 rounded-xl border px-4 text-sm font-semibold ${on ? "border-brand bg-brand text-on-brand" : "border-line bg-surface text-ink"}`}>{a}</button>
+            );
+          })}
+        </div>
+      </fieldset>
 
       {urgent && <p role="alert" className="rounded-2xl border border-red/30 bg-red-soft px-3.5 py-3 text-sm font-semibold text-red">Contact his vet or an emergency vet.</p>}
 

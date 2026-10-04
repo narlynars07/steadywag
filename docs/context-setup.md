@@ -81,10 +81,10 @@ Click **New MCP** (endpoint).
 - **Title:** `Steadywag chart`
 - **Name:** `steadywag-chart` (this cannot be changed later)
 - **Source:** dataset `<project-id>.production`
-- **groqFilter** (all 20 document types, including `dietHistoryEntry`, `careRoutine`, `familyNote` and the three `history*` types):
+- **groqFilter** (all 21 document types, including `dietHistoryEntry`, `careRoutine`, `familyNote`, `recordUpdate` and the three `history*` types):
 
 ```groq
-_type in ["dog","condition","medication","labTest","labResult","weightEntry","vetVisit","imagingStudy","flareEpisode","dietRule","foodItem","guidance","vetQuestion","recordGap","dietHistoryEntry","careRoutine","historySummary","historyChapter","historyPattern","familyNote"]
+_type in ["dog","condition","medication","labTest","labResult","weightEntry","vetVisit","imagingStudy","flareEpisode","dietRule","foodItem","guidance","vetQuestion","recordGap","dietHistoryEntry","careRoutine","historySummary","historyChapter","historyPattern","familyNote","recordUpdate"]
 ```
 
 - **Instructions:**

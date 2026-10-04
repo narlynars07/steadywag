@@ -35,7 +35,7 @@ const TABS: { href: string; label: string; Icon: (p: IconProps) => ReactNode; ow
   { href: "/check-in", label: "Check-in", Icon: CheckInIcon, owns: (p) => p.startsWith("/check-in") },
   {
     href: "/history", label: "History", Icon: HistoryIcon,
-    owns: (p) => ["/history", "/timeline", "/labs", "/meds", "/visit-prep"].some((r) => p.startsWith(r)),
+    owns: (p) => ["/history", "/timeline", "/labs", "/meds", "/visit-prep", "/changes"].some((r) => p.startsWith(r)),
   },
   { href: "/your-dog", label: "Your dog", Icon: DogIcon, owns: (p) => ["/your-dog", "/diet-history", "/guide"].some((r) => p.startsWith(r)) },
 ];

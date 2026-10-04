@@ -19,6 +19,7 @@ import {historySummary} from './documents/historySummary'
 import {historyChapter} from './documents/historyChapter'
 import {historyPattern} from './documents/historyPattern'
 import {familyNote} from './documents/familyNote'
+import {recordUpdate} from './documents/recordUpdate'
 
 export const schemaTypes = [
   // objects
@@ -44,4 +45,5 @@ export const schemaTypes = [
   historyChapter,
   historyPattern,
   familyNote,
+  recordUpdate,
 ]

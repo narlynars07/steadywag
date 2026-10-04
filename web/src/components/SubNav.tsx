@@ -9,6 +9,7 @@ const HISTORY = [
   { href: "/labs", label: "Labs" },
   { href: "/meds", label: "Medications" },
   { href: "/visit-prep", label: "Visit prep" },
+  { href: "/changes", label: "What changed" },
 ];
 const TODAY_GROUP = [
   { href: "/today", label: "Today" },

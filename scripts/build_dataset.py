@@ -963,6 +963,27 @@ if FAMILY_NOTES_APPROVED:
     add("vetQuestion", "vetQuestion.q-appetite-stimulant", question="His written medication list shows his appetite stimulant as stopped, but the family still uses it on no-appetite days. Is it still prescribed, and when should it be used?",
         why="A medication used at home is not on his written list, the same way the ursodiol instruction was never written down.", status="open", condition=ref(PANC))
 
+# ---- The record's own change log: what was added, flagged or resolved, and who said so.
+UPDATES = [
+    ("2026-10-02", "flagged", "family", "Ursodiol: on his written list, but never given",
+     "His June and August 2026 medication lists still show ursodiol, but a caregiver was told in person not to give it. Nothing written says so, which is the gap this app exists to show.",
+     ["medication.ursodiol", "recordGap.ursodiol-instruction"]),
+    ("2026-10-03", "added", "family", "Added the family's daily routine",
+     "Meal and medication times from the family's own sitter schedule. They fill in a time only where his vet's written instructions give none, and are always labeled as the family's routine.",
+     ["careRoutine.morning-meds", "careRoutine.breakfast"]),
+    ("2026-10-03", "flagged", "documents", "Cerenia: his list and his written instruction disagree",
+     "The August 25, 2026 medication list says Monday, Wednesday and Friday. The written instruction in the same report says every 24 hours as needed. Both are shown, and the question is open for his vet.",
+     ["medication.cerenia", "recordGap.cerenia-schedule"]),
+    ("2026-10-03", "added", "documents", "Added his story: five chapters and four patterns",
+     "Written from his visit reports, labs and medication lists, each pointing at the records it rests on.",
+     ["historyChapter.1", "historyChapter.5"]),
+    ("2026-10-03", "added", "family", "Added what his family has noticed",
+     "Six family observations on History, each labeled Family observations and marked as not something his vet told them to do. Medication timing and doses were left out.",
+     ["familyNote.1", "familyNote.6"]),
+]
+for i, (d, k, b, title, summary, aff) in enumerate(UPDATES, 1):
+    add("recordUpdate", f"recordUpdate.{d}-{i}", date=d, kind=k, basis=b, title=title, summary=summary, affects=refs(aff))
+
 # One name for the drug on every page: "Atopica (cyclosporine)". Applies to display text only, never to ids,
 # references or the genericName field. Runs last so it covers everything added above.
 _ATOPICA = "Atopica (cyclosporine)"

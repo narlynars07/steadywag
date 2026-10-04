@@ -1,6 +1,6 @@
 import { sanityFetch } from "./sanity";
 import type {
-  FamilyNote, HistoryChapter, HistoryPattern, HistorySummary,
+  FamilyNote, RecordUpdate, HistoryChapter, HistoryPattern, HistorySummary,
   CareRoutine, Dog, DietHistoryEntry, DietRule, Flare, Food, Gap, Guidance, Imaging, LabPoint, LabTestSummary, Medication, Question, Visit, WeightPoint,
 } from "./types";
 
@@ -134,3 +134,6 @@ export const getDockProfile = () =>
 
 export const getFamilyNotes = () =>
   sanityFetch<FamilyNote[]>(`*[_type == "familyNote"] | order(order asc){ _id, order, title, body, directedBy, askYourVet }`);
+
+export const getRecordUpdates = () =>
+  sanityFetch<RecordUpdate[]>(`*[_type == "recordUpdate"] | order(date desc, _createdAt desc){ _id, date, title, summary, kind, basis }`);

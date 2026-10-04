@@ -232,3 +232,5 @@ export interface HistoryPattern { _id: string; order: number; title: string; bod
 
 /** Something one family has noticed while caring for him. An observation, never advice. */
 export interface FamilyNote { _id: string; order: number; title: string; body: string; directedBy?: "family" | "vet"; askYourVet?: string }
+
+export interface RecordUpdate { _id: string; date: string; title: string; summary?: string; kind: "added" | "corrected" | "flagged" | "resolved"; basis: "vet" | "family" | "documents" }

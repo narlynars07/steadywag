@@ -23,6 +23,7 @@ THE CHART (a public, de-identified Sanity dataset). Query it with GROQ. Document
 - careRoutine: title, kind (meal | medication | bedtime | note), sortOrder, timeLabel, detail, items[]{note, medication->name}, source. The family's own daily routine. It supplies times only where the vet's written instructions give none.
 - historySummary: title, body, sources[]-> (the short story of his history). historyChapter: order, title, dates, startDate, endDate, summary, keyNumbers, notInRecords, sources[]->. historyPattern: order, title, body, timingOnly, sources[]->. These are written from his records and each points at the visits, labs and medications it rests on.
 - familyNote: order, title, body, directedBy ("family" = the family's own approach, not told by the vet), askYourVet. What one family has noticed. An observation, never advice.
+- recordUpdate: date, title, summary, kind (added | corrected | flagged | resolved), basis (vet | family | documents). The change log of this record: what was added, corrected, flagged or resolved, and who said so.
 - vetQuestion: question, why, status
 - recordGap: title, kind, why, whereToLook, status, ownerNote
 Every fact carries source.confidence: "confirmed", "single-source", or "conflicting".
