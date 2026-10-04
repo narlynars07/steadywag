@@ -74,6 +74,13 @@ Browser ── Ask page (useChat) ──> POST /api/chat  (Next.js route, rate-l
 - **Fallback:** if the Context endpoints are not configured or unreachable, the agent queries the same public dataset directly. This is deliberate, but it is never silent. The server logs a JSON `agent_fallback` line with the reason, and the answer shows a visible "Direct query, not Sanity Context" notice.
 - **Cost protection:** per-visitor and site-wide daily question limits (`web/src/lib/limits.ts`), counted in Upstash Redis. Set the model provider's workspace spend limit as well.
 
+## Security notes
+
+- No secrets in the repo or its history (scanned). `.env*`, `data/private/` and `.vercel` are git-ignored; real values live only in Vercel's encrypted environment variables and a local `.env.local`. The only `NEXT_PUBLIC_` values are the public Sanity project ID and dataset name.
+- The dataset is public read on purpose and holds no names, contact details, addresses, clinic names or identifiers. The web app never writes to it; the write token is used only by `scripts/load_dataset.py` on one machine and is not set on Vercel.
+- The daily question limit stores a one-way hash of the visitor's address (never the address) for 24 hours. Question text is not logged.
+- Every page is sent with `X-Content-Type-Options`, `X-Frame-Options: DENY`, a minimal `Referrer-Policy` and a `Permissions-Policy` that turns off camera, microphone, location and payments.
+
 ## Install it (PWA)
 
 Steadywag is an installable web app: a web manifest (name, theme colors, icons, shortcuts to Today, Check-in and Appointments), a small service worker, and an offline page. Chrome and Android show an install button (also in the phone More menu); on iPhone, Share then Add to Home Screen. A small card (`InstallBanner`) explains this once on phones, only after a second page or 20 seconds, never when already installed, and "Not now" hides it for 30 days. The service worker (`web/public/sw.js`) fetches pages network first, so he is never shown stale records, and keeps the last good copy as the offline fallback; static files are stale-while-revalidate. It never touches `/api` (the chat), other origins, or anything that is not a plain GET. Check-ins and appointments live in the browser's own storage, so they work offline. Asking a question needs a connection.

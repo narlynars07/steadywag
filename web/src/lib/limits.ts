@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { Redis } from "@upstash/redis";
 
 // Public chat spends real API credit, so every question passes two daily caps before the model is called:
@@ -29,10 +30,13 @@ async function count(key: string): Promise<number> {
   return n;
 }
 
+// The counter key holds a one-way hash of the address, mixed with the day, never the address itself. It expires after a day.
+const fingerprint = (visitor: string, day: string) => createHash("sha256").update(`${day}:${visitor}`).digest("hex").slice(0, 32);
+
 export async function checkLimits(visitor: string): Promise<LimitResult> {
   const day = new Date().toISOString().slice(0, 10);
   try {
-    const mine = await count(`steadywag:visitor:${day}:${visitor}`);
+    const mine = await count(`steadywag:visitor:${day}:${fingerprint(visitor, day)}`);
     if (mine > PER_VISITOR_PER_DAY) {
       return { ok: false, status: 429, error: `You've reached today's limit of ${PER_VISITOR_PER_DAY} questions. It resets tomorrow.` };
     }
