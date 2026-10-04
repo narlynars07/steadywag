@@ -9,7 +9,7 @@ type AgentMode = "context-mcp" | "direct";
 type ChatMessage = UIMessage<{ agentMode?: AgentMode }>;
 
 const SUGGESTIONS = [
-  "Are his freeze-dried treats allowed?",
+  "Can he have blueberries?",
   "What did he eat before his diagnosis?",
   "Is anything on his medication list not actually being given?",
   "Is his ALT trend moving the right way?",

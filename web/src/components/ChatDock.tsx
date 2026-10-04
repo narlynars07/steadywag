@@ -13,7 +13,7 @@ const CONTEXTS: { match: (p: string) => boolean; label: string; title: string; s
   { match: (p) => p.startsWith("/labs"), label: "Ask about his labs", title: "Ask about his labs", suggestions: ["Is his ALT trend moving the right way?", "What was his liver copper level?", "What is ALKP and why does it matter?"] },
   { match: (p) => p.startsWith("/history") || p.startsWith("/timeline"), label: "Ask about his history", title: "Ask about his history", suggestions: ["How did his liver problem start?", "What has been recommended and not done?", "What happened in 2024?"] },
   { match: (p) => p.startsWith("/check-in"), label: "Ask about check-ins", title: "Ask about his check-ins", suggestions: ["What do the stool scores mean?", "When should I call the vet?"] },
-  { match: (p) => p.startsWith("/food"), label: "Ask about his food", title: "Ask about his food", suggestions: ["Are his freeze-dried treats allowed?", "Can he have blueberries?", "What did he eat before his diagnosis?"] },
+  { match: (p) => p.startsWith("/food"), label: "Ask about his food", title: "Ask about his food", suggestions: ["Can he have salmon?", "Can he have blueberries?", "What did he eat before his diagnosis?"] },
   { match: (p) => p.startsWith("/visit-prep"), label: "Ask about his visit", title: "Ask about his next visit", suggestions: ["What should we ask at his next recheck?", "What records are missing?"] },
   { match: (p) => p.startsWith("/guide") || p.startsWith("/diet-history") || p.startsWith("/your-dog"), label: "Ask a question", title: "Ask a question", suggestions: ["What does the guide say about copper in food?", "What did he eat before his diagnosis?"] },
 ];
