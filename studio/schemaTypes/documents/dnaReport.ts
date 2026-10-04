@@ -13,7 +13,7 @@ export const dnaReport = defineType({
   fields: [
     defineField({name: 'title', title: 'Title', type: 'string', validation: (rule) => rule.required()}),
     defineField({name: 'testDate', title: 'Test date', type: 'date', validation: (rule) => rule.required()}),
-    defineField({name: 'provider', title: 'Test', type: 'string', description: 'The kind of test, for example "a consumer DNA test (Embark)". No kit or swab numbers.'}),
+    defineField({name: 'provider', title: 'Test', type: 'string', description: 'The kind of test, for example "a consumer DNA test". No kit or swab numbers.'}),
     defineField({
       name: 'breedMix',
       title: 'Breed mix',

@@ -986,7 +986,7 @@ for i, (d, k, b, title, summary, aff) in enumerate(UPDATES, 1):
 
 # ---- His DNA test (January 19, 2023). Results as the report states them. No kit or swab numbers, no personal report links.
 DNA_SRC = src("dna-test", "2023-01-19", "single-source", "A consumer DNA test report. A genetic test is not a diagnosis. The test date is the day before his first specialist consult.")
-add("dnaReport", "dnaReport.theo", title="His DNA", testDate="2023-01-19", provider="a consumer DNA test (Embark)",
+add("dnaReport", "dnaReport.theo", title="His DNA", testDate="2023-01-19", provider="a consumer DNA test",
     breedMix=[{"_type": "breedShare", "_key": key("bm"), "breed": b, "percent": p} for b, p in
               [("Shih Tzu", 20.9), ("Chihuahua", 17.7), ("Lhasa Apso", 16.8), ("Pekingese", 13.2), ("Bichon Frise", 13.0), ("Poodle (small)", 12.2), ("Pomeranian", 6.2)]],
     predictedAdultWeightLb=19, increasedRiskCount=0, breedRelevantClear=18, otherClear=237,
