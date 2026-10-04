@@ -12,7 +12,7 @@ const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 const jetbrains = JetBrains_Mono({ variable: "--font-jetbrains", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://steadywag.vercel.app"),
+  metadataBase: new URL("https://steadywag.com"),
   openGraph: { siteName: "Steadywag", type: "website" },
   title: "Steadywag",
   description:

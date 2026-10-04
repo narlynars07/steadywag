@@ -9,7 +9,7 @@ It has two jobs:
 
 Built for the DEV Sanity Challenge, Path One (an agent that queries real content).
 
-- **Live site:** https://steadywag.vercel.app
+- **Live site:** https://steadywag.com (the original https://steadywag.vercel.app also works)
 - **Sanity project ID:** `yahsq70q` (dataset `production`, public read)
 - **Studio:** https://steadywag.sanity.studio
 - **Public dataset query URL:** `https://yahsq70q.api.sanity.io/v2026-10-01/data/query/production?query=count(*)`
