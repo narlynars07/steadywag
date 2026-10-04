@@ -41,8 +41,11 @@
   --shadow: 0 1px 0 rgba(40, 30, 70, 0.04), 0 6px 20px rgba(40, 30, 70, 0.06);
 }
 
+/*
+ * Dark theme. "Auto" (no data-theme) follows the device; the visitor can pick Light or Dark, which sets data-theme on <html>.
+ */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --paper: #120f1d;
     --surface: #1a1628;
     --cream-2: #241f36;
@@ -76,6 +79,41 @@
     --gradient-soft: linear-gradient(135deg, #2b2050 0%, #1d2b40 50%, #17342a 100%);
     --shadow: 0 1px 0 rgba(0, 0, 0, 0.3), 0 6px 20px rgba(0, 0, 0, 0.25);
   }
+}
+
+:root[data-theme="dark"] {
+  --paper: #120f1d;
+  --surface: #1a1628;
+  --cream-2: #241f36;
+  --ink: #f0ecfa;
+  --ink-2: #d9d3ea;
+  --muted: #a59fbd;
+  --line: #2d2745;
+  --line-2: #3a3258;
+
+  --brand: #a67cf2;
+  --on-brand: #1b1233;
+  --brand-2: #c7adff;
+  --brand-soft: #2b2050;
+
+  --blue: #7db0e6;
+  --blue-soft: #1d2b40;
+
+  --green: #62d6a2;
+  --green-fill: #2fc88a;
+  --green-soft: #17342a;
+
+  --amber: #ecbc5c;
+  --amber-fill: #e0a63a;
+  --amber-soft: #3a2d12;
+
+  --red: #ff8f84;
+  --red-fill: #e9645a;
+  --red-soft: #3f1d1a;
+
+  --chart-grid: #2a2440;
+  --gradient-soft: linear-gradient(135deg, #2b2050 0%, #1d2b40 50%, #17342a 100%);
+  --shadow: 0 1px 0 rgba(0, 0, 0, 0.3), 0 6px 20px rgba(0, 0, 0, 0.25);
 }
 
 @theme inline {
@@ -112,6 +150,9 @@ html {
   background: var(--paper);
   color-scheme: light dark;
 }
+
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
 
 body {
   background: var(--paper);

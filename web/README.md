@@ -25,7 +25,7 @@ Most of the value is in what a keyword search over the original PDFs could not t
 
 ## What the site does
 
-Six destinations (Ask, Today, Check-in, Appointments, History, Your dog). On a phone the bottom bar shows the first four plus a More sheet that holds History, Your dog, the sitter brief and food; on a larger screen the top bar shows all six. Source labels are used everywhere: **Vet records**, **Family routine**, **Family recall**, **Your check-ins**.
+Color theme: Auto (follows the device), Light or Dark, remembered in the browser and applied before the page paints so it never flashes; a cycling button in the desktop top bar and a full control in the phone More sheet. Six destinations (Ask, Today, Check-in, Appointments, History, Your dog). On a phone the bottom bar shows the first four plus a More sheet that holds History, Your dog, the sitter brief and food; on a larger screen the top bar shows all six. Source labels are used everywhere: **Vet records**, **Family routine**, **Family recall**, **Your check-ins**.
 
 | Route | What it is |
 | --- | --- |

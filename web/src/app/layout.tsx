@@ -5,6 +5,7 @@ import { Nav } from "@/components/Nav";
 import { SubNav } from "@/components/SubNav";
 import { ChatDock } from "@/components/ChatDock";
 import { KeyboardAware } from "@/components/KeyboardAware";
+import { THEME_BOOT } from "@/lib/theme";
 import { getDockProfile } from "@/lib/data";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
@@ -23,6 +24,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     // suppressHydrationWarning: browser extensions often add attributes to <html> before React loads.
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${jetbrains.variable} h-full antialiased`}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
+      </head>
       <body className="min-h-full flex flex-col">
         <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-surface focus:px-3 focus:py-2">
           Skip to content

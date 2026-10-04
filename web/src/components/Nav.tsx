@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
+import { ThemeToggle } from "./ThemeToggle";
 import { resetConversation } from "@/lib/conversation";
 import { useLocalDay } from "@/lib/useLocalDay";
 
@@ -94,7 +95,7 @@ export function Nav() {
                   aria-label={t.label}
                   title={t.label}
                   onClick={() => { if (t.href === "/") resetConversation(); }}
-                  className={`flex min-h-10 items-center gap-2 rounded-full px-3 text-sm font-medium transition-colors lg:px-3.5 ${
+                  className={`flex min-h-10 items-center gap-2 whitespace-nowrap rounded-full px-3 text-sm font-medium transition-colors ${
                     active ? "bg-brand text-on-brand" : "text-muted hover:bg-brand-soft hover:text-ink"
                   }`}
                 >
@@ -106,7 +107,8 @@ export function Nav() {
           </nav>
 
           <div className="ml-auto flex items-center gap-2.5">
-            <span className="hidden text-[13px] text-muted min-[900px]:inline">{shortDate(day)}</span>
+            <span className="hidden md:block"><ThemeToggle variant="cycle" /></span>
+            <span className="text-[13px] text-muted md:hidden">{shortDate(day)}</span>
             <Link href="/history" aria-label="Theo, his history" className="block h-8 w-8 overflow-hidden rounded-full border-2 border-surface shadow-[0_0_0_1.5px_var(--brand)]">
               <Image src="/theo.jpg" alt="Theo" width={64} height={64} className="h-full w-full object-cover object-[50%_30%]" />
             </Link>
@@ -154,6 +156,10 @@ export function Nav() {
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
               </button>
             </div>
+            <section className="mt-3" aria-label="Appearance">
+              <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-muted">Appearance</p>
+              <ThemeToggle variant="full" />
+            </section>
             {MORE.map((g) => (
               <section key={g.title} className="mt-3" aria-label={g.title}>
                 <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-muted">{g.title}</p>
