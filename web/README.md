@@ -79,6 +79,7 @@ Browser ── Ask page (useChat) ──> POST /api/chat  (Next.js route, rate-l
 - No secrets in the repo or its history (scanned). `.env*`, `data/private/` and `.vercel` are git-ignored; real values live only in Vercel's encrypted environment variables and a local `.env.local`. The only `NEXT_PUBLIC_` values are the public Sanity project ID and dataset name.
 - The dataset is public read on purpose and holds no names, contact details, addresses, clinic names or identifiers. The web app never writes to it; the write token is used only by `scripts/load_dataset.py` on one machine and is not set on Vercel.
 - The daily question limit stores a one-way hash of the visitor's address (never the address) for 24 hours. Question text is not logged.
+- Dependency alerts: the remaining Dependabot alerts are in Sanity's command-line and Studio tooling and in the linter (`braces`, `uuid`), not in code the site runs or imports. `braces` has no patched release yet. `adm-zip`, `undici`, `smol-toml` and `js-yaml` in that tooling are pinned to patched versions with npm `overrides` in `web/` and `studio/`.
 - Every page is sent with `X-Content-Type-Options`, `X-Frame-Options: DENY`, a minimal `Referrer-Policy` and a `Permissions-Policy` that turns off camera, microphone, location and payments.
 
 ## Install it (PWA)
