@@ -34,6 +34,7 @@ const TASK_CARDS: { task: Task; title: string; sub: string; icon: ReactNode }[] 
 const URGENT =
   "If he stops eating for a day, vomits more than once, has blood or black stool, yellow gums, or seems very unwell, contact his vet or an emergency vet now.";
 const SUGGESTED = ["Is his ALT trend moving the right way?", "Are his freeze-dried treats allowed?", "What did he eat before his diagnosis?", "What has been recommended and not done?"];
+const LIMIT_NOTE = "This free demo limits questions each day, per person and overall, to keep it running. If you reach the limit, every other page still works.";
 
 function Spinner() {
   return (
@@ -302,6 +303,7 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false, onN
             ))}
           </div>
         </form>
+        <p className="text-[11px] leading-relaxed text-muted">{LIMIT_NOTE}</p>
       </div>
 
       {profile.alert && <NotGivenCallout name={profile.alert} since={profile.alertSince} variant="compact" />}
@@ -412,6 +414,7 @@ export function AskApp({ profile, initialQuestion, autorun, compact = false, onN
         ))}
       </div>
       <p className="mt-2 max-w-lg text-[11px] leading-relaxed text-muted">Not veterinary advice. If your dog isn&apos;t eating, is vomiting repeatedly, has blood or black stool, yellow gums, or seems very unwell, contact your vet or an emergency vet now.</p>
+      <p className="max-w-lg text-[11px] leading-relaxed text-muted">{LIMIT_NOTE}</p>
     </div>
   );
 
