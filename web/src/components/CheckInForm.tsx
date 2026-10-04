@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useRef, useState, useSyncExternalStore } from "react";
 import { ACTIVITIES, YELLOW_PLACES, EMPTY_CHECKIN, deleteCheckIn, describe, eraseCheckIns, importCheckIns, parse, saveCheckIn, snapshot, subscribe, toCsv, toJson, type CheckIn } from "@/lib/checkins";
+import { DeviceOnlyNote } from "./DeviceOnlyNote";
 import { fmtDate } from "@/lib/format";
 import { useLocalDay } from "@/lib/useLocalDay";
 
@@ -61,6 +62,8 @@ export function CheckInForm({ scale }: { scale: { score: number; text: string }[
         <h1 className="text-[28px] font-extrabold leading-tight tracking-tight text-ink">Daily check-in</h1>
         <p className="mt-1 text-[15px] leading-relaxed text-ink2">His vet asked for a log of his days. Thirty seconds, and I&apos;ll bring it to his next visit.</p>
       </div>
+
+      <DeviceOnlyNote what="Your check-ins" />
 
       {!isToday && (
         <div role="status" className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-brand bg-brand-soft px-3.5 py-2.5 text-sm text-ink">
@@ -185,7 +188,7 @@ export function CheckInForm({ scale }: { scale: { score: number; text: string }[
       </section>
 
       <section className="rounded-2xl border border-line bg-surface px-3.5 py-3">
-        <h2 className="text-base font-bold text-ink">Keep a copy</h2>
+        <h2 id="keep-a-copy" className="scroll-mt-24 text-base font-bold text-ink">Keep a copy</h2>
         <p className="mt-1 text-sm leading-relaxed text-ink2">
           Your check-ins are saved on this device, in this browser. They stay after you close the page, but clearing the browser&apos;s site data or using a private window removes them,
           and they don&apos;t move to another phone. Download a backup now and then, and restore it here if you ever need to.

@@ -2,6 +2,7 @@
 
 import { useRef, useState, useSyncExternalStore } from "react";
 import { KINDS, KIND_LABEL, deleteAppointment, eraseAppointments, importAppointments, newId, parse, saveAppointment, snapshot, subscribe, toIcs, toJson, type Appointment, type ApptKind } from "@/lib/appointments";
+import { DeviceOnlyNote } from "./DeviceOnlyNote";
 import { fmtDate } from "@/lib/format";
 import { useLocalDay } from "@/lib/useLocalDay";
 
@@ -93,6 +94,8 @@ export function AppointmentsView({ suggestion }: { suggestion?: Suggestion | nul
         <h1 className="text-[28px] font-extrabold leading-tight tracking-tight text-ink">Appointments</h1>
         <p className="mt-1 text-[15px] leading-relaxed text-ink2">Vet visits, grooming and dental, all in one place. Add each one to your own calendar for a reminder.</p>
       </div>
+
+      <DeviceOnlyNote what="Your appointments" />
 
       <section aria-labelledby="up" className="flex flex-col gap-2">
         <h2 id="up" className="text-lg font-extrabold tracking-tight text-ink">Coming up</h2>
@@ -192,7 +195,7 @@ export function AppointmentsView({ suggestion }: { suggestion?: Suggestion | nul
       )}
 
       <section className="rounded-2xl border border-line bg-surface px-3.5 py-3">
-        <h2 className="text-base font-bold text-ink">Keep a copy</h2>
+        <h2 id="keep-a-copy" className="scroll-mt-24 text-base font-bold text-ink">Keep a copy</h2>
         <p className="mt-1 text-sm leading-relaxed text-ink2">
           Appointments are saved on this device, in this browser. They stay after you close the page, but clearing site data or using a private window removes them, and they don&apos;t move to another phone.
           Use <strong className="font-semibold">Add to my calendar</strong> to put each one in your own calendar, and download a backup now and then.

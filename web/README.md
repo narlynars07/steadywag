@@ -74,6 +74,10 @@ Browser ── Ask page (useChat) ──> POST /api/chat  (Next.js route, rate-l
 - **Fallback:** if the Context endpoints are not configured or unreachable, the agent queries the same public dataset directly. This is deliberate, but it is never silent. The server logs a JSON `agent_fallback` line with the reason, and the answer shows a visible "Direct query, not Sanity Context" notice.
 - **Cost protection:** per-visitor and site-wide daily question limits (`web/src/lib/limits.ts`), counted in Upstash Redis. Set the model provider's workspace spend limit as well.
 
+## Why check-ins and appointments stay on one device
+
+His medical record is shared: it lives in Sanity, so every device sees the same thing. His check-ins, appointments and theme are personal logs, and they live in the visitor's own browser on purpose. They are private health details, so nothing is stored on a server; and saving to a server would need accounts, because without sign-in every visitor's entries would land in one shared pile. Each page says "Saved on this device only" at the top, and a backup file moves the data to another device. The next step for a real product is sign-in plus a private database so the logs follow a family across devices (see `docs/keeping-the-record-current.md`).
+
 ## What can write to the dataset
 
 Nothing public. The web app has no mutations. The only POST route, `/api/chat`, writes rate-limit counters to Redis, not to the dataset. It stores no conversations. The Context endpoints are read-only. Writes happen only through `scripts/load_dataset.py` with an editor token.
