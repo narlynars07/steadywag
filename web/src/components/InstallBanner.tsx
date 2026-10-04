@@ -56,27 +56,27 @@ export function InstallBanner() {
 
   const later = () => { try { localStorage.setItem(KEY, String(Date.now())); } catch { /* ignore */ } setHidden(true); };
   return (
-    <div role="dialog" aria-label="Add Steadywag to your home screen" className="install-banner no-print fixed inset-x-3 bottom-[5rem] z-[55] rounded-2xl border border-line bg-surface p-4 shadow-[0_8px_32px_rgba(23,19,42,0.3)] md:hidden">
+    <div role="dialog" aria-label="Add Steadywag to your home screen" className="install-banner no-print fixed inset-x-3 bottom-[5rem] z-[55] rounded-2xl bg-brand p-4 text-on-brand shadow-[0_0_0_2px_rgba(255,255,255,0.35),0_12px_40px_rgba(0,0,0,0.45)] md:hidden">
       <div className="flex items-start gap-3">
-        <Image src="/icons/icon-192.png" alt="" width={44} height={44} className="h-11 w-11 shrink-0 rounded-xl" />
+        <span className="shrink-0 rounded-xl bg-white p-1"><Image src="/icons/icon-192.png" alt="" width={40} height={40} className="h-10 w-10 rounded-lg" /></span>
         <div className="min-w-0 flex-1">
-          <p className="text-[15px] font-extrabold leading-tight tracking-tight text-ink">Keep Steadywag on your home screen</p>
+          <p className="text-base font-extrabold leading-tight tracking-tight text-on-brand">Keep Steadywag on your home screen</p>
           {env === "ios" ? (
-            <ol className="mt-1.5 space-y-1 text-sm leading-snug text-ink2">
-              <li><strong className="font-semibold text-ink">1.</strong> Tap <strong className="font-semibold text-ink">Share</strong> <span aria-hidden="true">(the square with an arrow)</span> in Safari.</li>
-              <li><strong className="font-semibold text-ink">2.</strong> Choose <strong className="font-semibold text-ink">Add to Home Screen</strong>.</li>
+            <ol className="mt-1.5 space-y-1 text-sm leading-snug text-on-brand">
+              <li><strong className="font-bold underline decoration-current/50 underline-offset-2">1.</strong> Tap <strong className="font-bold underline decoration-current/50 underline-offset-2">Share</strong> <span aria-hidden="true">(the square with an arrow)</span> in Safari.</li>
+              <li><strong className="font-bold underline decoration-current/50 underline-offset-2">2.</strong> Choose <strong className="font-bold underline decoration-current/50 underline-offset-2">Add to Home Screen</strong>.</li>
             </ol>
           ) : (
-            <p className="mt-1 text-sm leading-snug text-ink2">One tap opens it full screen, and your check-ins and appointments work even without a signal.</p>
+            <p className="mt-1 text-sm leading-snug text-on-brand">One tap opens it full screen, and your check-ins and appointments work even without a signal.</p>
           )}
         </div>
       </div>
       <div className="mt-3 flex gap-2">
         {env === "phone" && event && (
           <button type="button" onClick={async () => { await event.prompt(); const r = await event.userChoice; setEvent(null); if (r.outcome !== "accepted") later(); else setHidden(true); }}
-            className="min-h-11 flex-1 rounded-xl bg-brand px-4 text-sm font-bold text-on-brand">Install</button>
+            className="min-h-11 flex-1 rounded-xl bg-on-brand px-4 text-sm font-bold text-brand">Install</button>
         )}
-        <button type="button" onClick={later} className={`min-h-11 rounded-xl border border-line px-4 text-sm font-semibold text-ink2 ${env === "ios" ? "flex-1" : ""}`}>Not now</button>
+        <button type="button" onClick={later} className={`min-h-11 rounded-xl border border-on-brand/60 px-4 text-sm font-semibold text-on-brand ${env === "ios" ? "flex-1" : ""}`}>Not now</button>
       </div>
     </div>
   );
