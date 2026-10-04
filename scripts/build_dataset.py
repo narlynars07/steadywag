@@ -984,6 +984,39 @@ UPDATES = [
 for i, (d, k, b, title, summary, aff) in enumerate(UPDATES, 1):
     add("recordUpdate", f"recordUpdate.{d}-{i}", date=d, kind=k, basis=b, title=title, summary=summary, affects=refs(aff))
 
+# ---- His DNA test (January 19, 2023). Results as the report states them. No kit or swab numbers, no personal report links.
+DNA_SRC = src("dna-test", "2023-01-19", "single-source", "A consumer DNA test report. A genetic test is not a diagnosis. The test date is the day before his first specialist consult.")
+add("dnaReport", "dnaReport.theo", title="His DNA", testDate="2023-01-19", provider="a consumer DNA test (Embark)",
+    breedMix=[{"_type": "breedShare", "_key": key("bm"), "breed": b, "percent": p} for b, p in
+              [("Shih Tzu", 20.9), ("Chihuahua", 17.7), ("Lhasa Apso", 16.8), ("Pekingese", 13.2), ("Bichon Frise", 13.0), ("Poodle (small)", 12.2), ("Pomeranian", 6.2)]],
+    predictedAdultWeightLb=19, increasedRiskCount=0, breedRelevantClear=18, otherClear=237,
+    notableClear=[
+        {"_type": "notableGroup", "_key": key("ng"), "title": "Inherited bleeding disorders",
+         "tests": ["Von Willebrand disease types I, II and III", "Factor VII deficiency", "Factor XI deficiency", "Prekallikrein deficiency", "Scott syndrome (platelet)"],
+         "whyItMatters": "His vet asks about bruising at every visit. These are the inherited bleeding disorders on the panel, and none was found."},
+        {"_type": "notableGroup", "_key": key("ng"), "title": "Stone-related variants",
+         "tests": ["Urate kidney and bladder stones (SLC2A9)", "Xanthine urolithiasis", "2-DHA kidney and bladder stones"],
+         "whyItMatters": "His diet plan limits high-purine foods. None of these inherited stone variants was found."},
+        {"_type": "notableGroup", "_key": key("ng"), "title": "Liver-related and other markers",
+         "tests": ["ALT activity (GPT)", "Diffuse cystic renal dysplasia and hepatic fibrosis (Norwich Terrier variant)", "Congenital hypothyroidism variants"],
+         "whyItMatters": "ALT is the liver enzyme his team follows. The gene that affects ALT activity tested clear."},
+        {"_type": "notableGroup", "_key": key("ng"), "title": "Appetite gene",
+         "tests": ["POMC (food motivation)"], "whyItMatters": "The normal type: no genetic push toward eating more."},
+    ],
+    otherResults=[
+        {"_type": "otherResult", "_key": key("or"), "title": "Inbreeding", "result": "27%", "note": "The report describes this as how closely related his parents were, and says greater inbreeding is generally associated with more inherited conditions."},
+        {"_type": "otherResult", "_key": key("or"), "title": "Immune-gene diversity", "result": "No diversity at two sites", "note": "The report says some studies link low diversity to autoimmune disease, and that these findings have not yet been scientifically validated."},
+        {"_type": "otherResult", "_key": key("or"), "title": "Predicted adult weight", "result": "19 lb (about 8.6 kg)", "note": "A genetic estimate, not a target. His vet's body condition scores are what his records use."},
+    ],
+    notCovered="This report has no copper-related test, and it was done before his copper storage disease was diagnosed (the biopsy was March 10, 2023). A genetic test is not a diagnosis.",
+    comparison="None of his seven breeds is among the breeds the copper-associated hepatitis guidance names most often: Bedlington terriers, Labrador retrievers, Doberman pinschers, West Highland white terriers, Dalmatians and cocker and springer spaniels. This comes from comparing two documents, not from either one. The same guidance says the disease can occur in any breed or mixed breed.",
+    caveat="Results are listed as the report states them. Kit numbers and personal report links are not shown.", source=DNA_SRC)
+add("vetQuestion", "vetQuestion.q-copper-genetic-test", question="Would any genetic test for copper-related liver disease apply to a mixed-breed dog like Theo, and would the result change his care?",
+    why="His January 2023 DNA test has no copper-related result, and it was done before his diagnosis. His mix includes none of the breeds the published guidance names most often.", status="open", condition=ref(COPPER))
+add("recordUpdate", "recordUpdate.2026-10-03-dna", date="2026-10-03", kind="added", basis="documents", title="Added his DNA test",
+    summary="His January 19, 2023 DNA report: seven breeds, no increased-risk results among 255 tested conditions, and a note that it has no copper-related test.",
+    affects=refs(["dnaReport.theo", "vetQuestion.q-copper-genetic-test"]))
+
 # One name for the drug on every page: "Atopica (cyclosporine)". Applies to display text only, never to ids,
 # references or the genericName field. Runs last so it covers everything added above.
 _ATOPICA = "Atopica (cyclosporine)"

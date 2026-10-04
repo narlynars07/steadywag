@@ -234,3 +234,12 @@ export interface HistoryPattern { _id: string; order: number; title: string; bod
 export interface FamilyNote { _id: string; order: number; title: string; body: string; directedBy?: "family" | "vet"; askYourVet?: string }
 
 export interface RecordUpdate { _id: string; date: string; title: string; summary?: string; kind: "added" | "corrected" | "flagged" | "resolved"; basis: "vet" | "family" | "documents" }
+
+export interface DnaReport {
+  _id: string; title: string; testDate: string; provider?: string;
+  breedMix?: { breed: string; percent: number }[];
+  predictedAdultWeightLb?: number; increasedRiskCount?: number; breedRelevantClear?: number; otherClear?: number;
+  notableClear?: { title: string; tests?: string[]; whyItMatters?: string }[];
+  otherResults?: { title: string; result: string; note?: string }[];
+  notCovered?: string; comparison?: string; caveat?: string;
+}

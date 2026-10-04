@@ -41,14 +41,14 @@ const TABS: { href: string; label: string; Icon: (p: IconProps) => ReactNode; ow
   { href: "/appointments", label: "Appointments", Icon: ApptIcon, owns: (p) => p.startsWith("/appointments"), phone: true },
   {
     href: "/history", label: "History", Icon: HistoryIcon, phone: false,
-    owns: (p) => ["/history", "/timeline", "/labs", "/meds", "/visit-prep", "/changes"].some((r) => p.startsWith(r)),
+    owns: (p) => ["/history", "/timeline", "/labs", "/meds", "/visit-prep", "/changes", "/dna"].some((r) => p.startsWith(r)),
   },
   { href: "/your-dog", label: "Your dog", Icon: DogIcon, phone: false, owns: (p) => ["/your-dog", "/diet-history", "/guide"].some((r) => p.startsWith(r)) },
 ];
 
 /** Everything the phone's bottom bar does not show, grouped. */
 const MORE: { title: string; links: [string, string][] }[] = [
-  { title: "History", links: [["His story", "/history"], ["Timeline", "/timeline"], ["Labs", "/labs"], ["Medications", "/meds"], ["Visit prep", "/visit-prep"], ["What changed", "/changes"]] },
+  { title: "History", links: [["His story", "/history"], ["Timeline", "/timeline"], ["Labs", "/labs"], ["Medications", "/meds"], ["Visit prep", "/visit-prep"], ["His DNA", "/dna"], ["What changed", "/changes"]] },
   { title: "Your dog", links: [["Your dog", "/your-dog"], ["Diet history", "/diet-history"], ["Guide", "/guide"]] },
   { title: "Around today", links: [["Sitter brief", "/sitter"], ["Food", "/food"]] },
 ];

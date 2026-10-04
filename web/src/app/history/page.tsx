@@ -153,6 +153,8 @@ export default async function History() {
           ))}
         </dl>
 
+        <p className="mt-3 text-sm text-ink2">A DNA test in January 2023 shows a mix of seven breeds and no increased-risk results. <Link href="/dna" className="font-semibold text-brand2 underline-offset-4 hover:underline">See his DNA</Link></p>
+
         <div className="mt-3 flex flex-wrap gap-2">
           {dog.conditions.map((c) => (
             <Chip key={c._id} wrap tone={c.status === "resolved" ? "green" : "brand"} title={c.summary}>

@@ -10,6 +10,7 @@ const HISTORY = [
   { href: "/meds", label: "Medications" },
   { href: "/visit-prep", label: "Visit prep" },
   { href: "/changes", label: "What changed" },
+  { href: "/dna", label: "His DNA" },
 ];
 const TODAY_GROUP = [
   { href: "/today", label: "Today" },
