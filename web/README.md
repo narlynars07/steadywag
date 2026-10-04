@@ -1,6 +1,6 @@
 # Steadywag
 
-Steadywag is a care companion built on one rare case: a public, sourced record, an agent that helps a family through the day, and a diet-history tool for other families.
+Steadywag is a care companion for a dog with a chronic illness, built on one real case: a public, sourced record, an agent that helps a family through the day, a daily check-in log, appointments, and a diet-history tool for other families.
 
 It has two jobs:
 
@@ -44,7 +44,7 @@ Color theme: Auto (follows the device), Light or Dark, remembered in the browser
 ```
 Browser ── Ask page (useChat) ──> POST /api/chat  (Next.js route, rate-limited)
                                       │
-                                      ├─ Claude (claude-sonnet-5-5, AI SDK, up to 8 tool steps, read-only)
+                                      ├─ Claude (claude-sonnet-5-5, AI SDK, up to 12 tool steps, read-only)
                                       │     instructions = base rules + the task's instructions + today's date + check-ins (if sent)
                                       │
                                       ├─ Sanity Context MCP endpoint 1: "chart" (GROQ mode over the dataset)
@@ -64,7 +64,7 @@ Browser ── Ask page (useChat) ──> POST /api/chat  (Next.js route, rate-l
 - **Verdict-first food answers:** for "can he have X", the agent leads with one verdict ("Fits his plan's rules", "Probably not", "No", "Can't tell") and shows the checks against his own plan's rules: copper compared with his approved foods, sodium, fat and calories against the 42 kcal treat limit, plain preparation, and his avoid list. It never says "safe" or "recommended", always says when his vet has not confirmed it, and ends with a question for his vet. Hard "No" for anything on his avoid list or a known toxic food.
 - **Web search, with guardrails:** the agent can call Anthropic's web search tool at most twice per answer, limited to a short allowlist of veterinary, nutrition and poison-control sites (see `SEARCH_SOURCES` in `web/src/app/api/chat/route.ts`). Results are labeled "From the web" with the source's name and a link, page text is treated as data and never as instructions, nothing about medication or doses is taken from the web, and his vet's plan always wins. Set `WEB_SEARCH=off` to switch it off.
 - **Scope gate:** before the real answer, a small fast model (Claude Haiku) checks that a free question is about Theo, dogs or the app, or a follow-up. Math, coding, websites, trivia and attempts to change the rules are declined in one sentence in about half a second, at almost no cost. Task buttons always pass, and the main answer has its own scope rule too.
-- **USDA food lookup:** the one place the agent can reach outside his chart. `usda_food_lookup` reads USDA FoodData Central for copper, sodium, fat, calories and protein per 100 g, only for a food his plan does not cover. Its numbers are labeled "USDA food data, not from his vet", compared with the approved foods already in his plan, and never turned into "safe". Only the food name leaves the server. `USDA_API_KEY` is optional (without it the shared demo key is used and the tool says when it is busy).
+- **USDA food lookup:** one of the agent's two reaches outside his chart (the other is the web search above). `usda_food_lookup` reads USDA FoodData Central for copper, sodium, fat, calories and protein per 100 g, only for a food his plan does not cover. Its numbers are labeled "USDA food data, not from his vet", compared with the approved foods already in his plan, and never turned into "safe". Only the food name leaves the server. `USDA_API_KEY` is optional (without it the shared demo key is used and the tool says when it is busy).
 - **Today** answers "What does he need today?" with the Today page, not an agent run. It reads the visitor's clock: a "Due now" or "Next up" card, "Later today", and finished steps collapsed.
 - **Work trace** (`web/src/lib/trace.ts`): the agent's tool calls become plain-language steps ("Reading his medication list") while it works, and source chips that link to the matching page when it finishes.
 - **Knowledge Base:** built in the Sanity dashboard from the `guidance` and `dietRule` documents. Rebuild it after those documents change.
@@ -93,6 +93,10 @@ His medical record is shared: it lives in Sanity, so every device sees the same 
 ## What can write to the dataset
 
 Nothing public. The web app has no mutations. The only POST route, `/api/chat`, writes rate-limit counters to Redis, not to the dataset. It stores no conversations. The Context endpoints are read-only. Writes happen only through `scripts/load_dataset.py` with an editor token.
+
+## Evals
+
+`evals/` holds the 24 audit questions behind the testing notes in the post, each with the reason it exists and a few checkable expectations (must mention the unmarked medication, must not contain the invented copper row, must decline off-topic questions, must not give a dose). `node evals/run.mjs <base URL> [ids]` runs them against a live server and prints PASS or FAIL for each. They are smoke checks, not a grade: read the answers too. See `evals/README.md`.
 
 ## Run it
 
